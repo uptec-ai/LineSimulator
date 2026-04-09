@@ -1,0 +1,190 @@
+using System.Collections.ObjectModel;
+using TestMcAlgorithm.Services;
+using TestMcAlgorithm.ViewModels;
+
+namespace TestMcAlgorithm.Models;
+
+public sealed class OvrEndpointSettingsModel : ObservableObject, IAsyncDisposable
+{
+    public enum EndpointStatus
+    {
+        Idle = 1,
+        Enable = 2,
+        Disable = 3,
+    }
+    private static readonly ushort[] EmptyRegisters = [];
+
+    private bool _isEnabled;
+    private string _ipAddress = "127.0.0.1";
+    private int _port = 502;
+    private int _unitId = 1;
+    private int _slaveId = 1;
+    private int _currentRegisterAddress;
+    private double _currentScale = 1.0;
+    private bool _readFromInputRegisters = true;
+    private bool _isConnected;
+    private EndpointStatus _statusText = EndpointStatus.Disable;
+    private string _info = string.Empty;
+    private double? _currentValue;
+    private IReadOnlyList<ushort> _registerSnapshot = EmptyRegisters;
+
+    public OvrEndpointSettingsModel(string name, string deviceKey, bool isEnabled = false)
+    {
+        Name = name;
+        DeviceKey = deviceKey;
+        _isEnabled = isEnabled;
+    }
+
+    public string Name { get; }
+
+    public string DeviceKey { get; }
+
+    public ModbusTcpEndpointClient Socket { get; } = new();
+
+    public SemaphoreSlim IoLock { get; } = new(1, 1); // 통신 작업을 한 번에 하나만 하게 막는 잠금장치 : 최대 1개 작업만 들어올 수 있음
+
+    public bool IsOvr => DeviceKey.StartsWith("OCR", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsEnabled
+    {
+        get => _isEnabled;
+        set => SetProperty(ref _isEnabled, value);
+    }
+
+    public string IpAddress
+    {
+        get => _ipAddress;
+        set => SetProperty(ref _ipAddress, value);
+    }
+
+    public int Port
+    {
+        get => _port;
+        set => SetProperty(ref _port, value);
+    }
+
+    public int UnitId
+    {
+        get => _unitId;
+        set => SetProperty(ref _unitId, value);
+    }
+
+    public int SlaveId
+    {
+        get => _slaveId;
+        set => SetProperty(ref _slaveId, value);
+    }
+
+    public int CurrentRegisterAddress
+    {
+        get => _currentRegisterAddress;
+        set => SetProperty(ref _currentRegisterAddress, value);
+    }
+
+    public double CurrentScale
+    {
+        get => _currentScale;
+        set => SetProperty(ref _currentScale, value);
+    }
+
+    public bool ReadFromInputRegisters
+    {
+        get => _readFromInputRegisters;
+        set => SetProperty(ref _readFromInputRegisters, value);
+    }
+
+    public bool IsConnected
+    {
+        get => _isConnected;
+        set => SetProperty(ref _isConnected, value);
+    }
+
+
+    public double? CurrentValue
+    {
+        get => _currentValue;
+        set
+        {
+            if (SetProperty(ref _currentValue, value))
+            {
+                RaisePropertyChanged(nameof(CurrentValueText));
+            }
+        }
+    }
+
+    public IReadOnlyList<ushort> RegisterSnapshot
+    {
+        get => _registerSnapshot;
+        private set => SetProperty(ref _registerSnapshot, value);
+    }
+
+    public EndpointStatus Status
+    {
+        get => _statusText;
+        set => SetProperty(ref _statusText, value);
+    }
+
+    public string Info
+    {
+        get => _info;
+        set => SetProperty(ref _info, value);
+    }
+
+    public string CurrentValueText => CurrentValue.HasValue ? $"{CurrentValue.Value:0.0} A" : "-";
+
+    public void ApplyReadResult(bool isConnected, double? currentValue, EndpointStatus statusText, IReadOnlyList<ushort>? registers = null)
+    {
+        IsConnected = isConnected;
+        CurrentValue = currentValue;
+        Status = statusText;
+        RegisterSnapshot = registers ?? EmptyRegisters;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Socket.DisposeAsync();
+        IoLock.Dispose();
+    }
+}
+
+public sealed class OvrSettingsDialogModel : ObservableObject, IAsyncDisposable
+{
+    private bool _isVisible;
+
+    public OvrSettingsDialogModel()
+    {
+        Endpoints = new ObservableCollection<OvrEndpointSettingsModel>(
+        [
+            new("ISEM2-WHRUH_01", "OCR1"), // Over Current Relay1
+            new("ISEM2-WHRUH_02", "OCR2"), // Over Current Relay2
+            new("ISEM2-WHRUH_03", "OCR3"), // Over Current Relay3
+            new("ISEM2-WHRUH_04", "OCR4"), // Over Current Relay4
+            new("ISEM2-WHRUH_05", "OCR5"), // Over Current Relay5
+            new("ISEM2-WHRUH_06", "OCR6"), // Over Current Relay6
+            new("ISEM2-WHRUH_07", "OCR7"), // Over Current Relay7
+            new("ISEM2-WHRUH_08", "OCR8"), // Over Current Relay8
+            new("ISEM2-WHRUH_09", "OCR9"), // Over Current Relay9
+            new("ISEM2-WHRUH_10", "OCR10"), // Over Current Relay10
+            new("GIMAC1000", "PM1"),      // bus in 미터계
+            new("GIMAC1000", "PM2"),      // bus out1 미터계
+            new("GIMAC1000", "PM3"),      // bus out2 미터계
+            new("GIMAC1000", "PM4"),      // bus out3 미터계 
+        ]);
+    }
+
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set => SetProperty(ref _isVisible, value);
+    }
+
+    public ObservableCollection<OvrEndpointSettingsModel> Endpoints { get; }
+
+    public async ValueTask DisposeAsync()
+    {
+        foreach (var endpoint in Endpoints)
+        {
+            await endpoint.DisposeAsync();
+        }
+    }
+}

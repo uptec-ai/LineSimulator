@@ -1,0 +1,557 @@
+<Window x:Class="TestMcAlgorithm.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:s="http://schemas.abtsoftware.co.uk/scichart"
+        xmlns:local="clr-namespace:TestMcAlgorithm.Views"
+        mc:Ignorable="d"
+        Title="TestMcAlgorithm"
+        Width="1920"
+        Height="1080"
+        MinWidth="1920"
+        MinHeight="1080"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        Background="#0F172A">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Style x:Key="CardBorderStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Background" Value="#162033"/>
+            <Setter Property="BorderBrush" Value="#26344D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style x:Key="KCardStyle" TargetType="Border">
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsOn}" Value="True">
+                    <Setter Property="Background" Value="#0F9D58"/>
+                    <Setter Property="BorderBrush" Value="#5DE2A5"/>
+                </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsOn}" Value="True"/>
+                        <Condition Binding="{Binding DisplayTargetBus}" Value="BUS1"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="#0F9D58"/>
+                    <Setter Property="BorderBrush" Value="#5DE2A5"/>
+
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsOn}" Value="True"/>
+                        <Condition Binding="{Binding DisplayTargetBus}" Value="BUS2"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="#B45309"/>
+                    <Setter Property="BorderBrush" Value="#FCD34D"/>
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsOn}" Value="True"/>
+                        <Condition Binding="{Binding DisplayTargetBus}" Value="BUS3"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="#1D4ED8"/>
+                    <Setter Property="BorderBrush" Value="#93C5FD"/>
+                </MultiDataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="BusComboStyle" TargetType="ComboBox">
+            <Setter Property="Margin" Value="0,0,0,2"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Background" Value="#0B1220"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style x:Key="OvrDataGridStyle" TargetType="DataGrid">
+            <Setter Property="Background" Value="#0B1220"/>
+            <Setter Property="Foreground" Value="#E2E8F0"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="RowBackground" Value="#111827"/>
+            <Setter Property="AlternatingRowBackground" Value="#1F2937"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#334155"/>
+            <Setter Property="VerticalGridLinesBrush" Value="#334155"/>
+        </Style>
+
+        <Style x:Key="OvrDataGridHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#374151"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="BorderBrush" Value="#475569"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="OvrDataGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Background" Value="#111827"/>
+            <Setter Property="Foreground" Value="#E2E8F0"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#374151"/>
+                    <Setter Property="Foreground" Value="#F8FAFC"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="OvrDataGridTextBlockStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="LightGray"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Enable">
+                    <Setter Property="Foreground" Value="Lime"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Idle">
+                    <Setter Property="Foreground" Value="Orange"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="OvrDataGridEditingTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="BorderBrush" Value="#64748B"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4,2"/>
+        </Style>
+
+        <Style x:Key="OvrDataGridCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#E2E8F0"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="250"/>
+            <RowDefinition Height="580"/>
+            <RowDefinition Height="170"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="12,0,12,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.3*"/>
+                <ColumnDefinition Width="1.5*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="30,10,0,0">
+                <TextBlock Text="Line Simulator" Foreground="White" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding State.Connection.IpAddress, StringFormat={} IP: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="18,0,0,0"/>
+                <TextBlock Text="{Binding State.Connection.Port, StringFormat={} Port: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="14,0,0,0"/>
+                <TextBlock Text="{Binding State.Connection.UnitId, StringFormat={} Unit ID: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="14,0,0,0"/>
+                <TextBlock Text="{Binding State.Connection.IsConnected, StringFormat={} Connected: {0}}" Foreground="#E2E8F0" VerticalAlignment="Center" Margin="18,0,0,0"/>
+
+                <Image Source="{dx:DXImage 'SvgImages/Spreadsheet/Time.svg'}"
+                            Width="22"
+                            Height="22"
+                            HorizontalAlignment="Left"
+                            RenderOptions.BitmapScalingMode="HighQuality" Margin="290,3,0,0"/>
+                <TextBlock Text="{Binding CurrentTime, Source={x:Static Application.Current}}" VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold" Foreground="White" Margin="5,0,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <dx:SimpleButton Content="계산" Width="120" Height="36" Margin="0,0,8,0" Command="{Binding CalculatePlanCommand}"/>
+            </StackPanel>
+
+
+            <Grid Grid.Column="0" Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Margin="0,-5,0,-5">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="BUS1" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                            <dx:SimpleButton Content="투입" Width="90" Height="30" Margin="85,0,8,0" Command="{Binding Bus1ApplyCommand}"/>
+                            <dx:SimpleButton Content="정지" Width="90" Height="30" Command="{Binding Bus1OffCommand}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                          ItemsSource="{Binding Bus1RatedOptions}"
+                                          SelectedItem="{Binding State.Bus1.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          ItemStringFormat="{}{0:g}" Width="227" Margin="10,0,0,0" Height="30"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                          ItemsSource="{Binding Bus1ScrOptions}"
+                                          SelectedItem="{Binding State.Bus1.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          ItemStringFormat="{}{0:g}" Width="227" Margin="64,0,0,2" Height="30"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding State.Bus1.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Margin="0,-5,0,-5">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Content="BUS2 사용" IsChecked="{Binding State.Bus2.IsEnabled}" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                            <dx:SimpleButton Content="투입" Width="90" Height="30" Margin="20,0,8,0" Command="{Binding Bus2ApplyCommand}"/>
+                            <dx:SimpleButton Content="정지" Width="90" Height="30" Command="{Binding Bus2OffCommand}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                          IsEnabled="{Binding State.Bus2.IsEnabled}"
+                                          ItemsSource="{Binding Bus2RatedOptions}"
+                                          SelectedItem="{Binding State.Bus2.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          ItemStringFormat="{}{0:g}" Width="220" Margin="10,0,0,0" Height="30"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                          IsEnabled="{Binding State.Bus2.IsEnabled}"
+                                          ItemsSource="{Binding Bus2ScrOptions}"
+                                          SelectedItem="{Binding State.Bus2.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          ItemStringFormat="{}{0:g}" Width="220" Margin="64,0,0,2" Height="30"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding State.Bus2.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Margin="0,-5,0,-5">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Content="BUS3 사용"
+                                      IsChecked="{Binding State.Bus3.IsEnabled}"
+                                      IsEnabled="{Binding State.Bus2.IsEnabled}"
+                                      Foreground="White"
+                                      FontSize="18"
+                                      FontWeight="Bold"/>
+                            <dx:SimpleButton Content="투입" Width="90" Height="30" Margin="29,0,8,0" Command="{Binding Bus3ApplyCommand}"/>
+                            <dx:SimpleButton Content="정지" Width="90" Height="30" Command="{Binding Bus3OffCommand}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                          IsEnabled="{Binding State.Bus3.IsEnabled}"
+                                          ItemsSource="{Binding Bus3RatedOptions}"
+                                          SelectedItem="{Binding State.Bus3.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          ItemStringFormat="{}{0:g}" Width="227" Margin="10,0,0,0" Height="30"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                          IsEnabled="{Binding State.Bus3.IsEnabled}"
+                                          ItemsSource="{Binding Bus3ScrOptions}"
+                                          SelectedItem="{Binding State.Bus3.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          ItemStringFormat="{}{0:g}" Width="227" Margin="64,0,0,2" Height="30"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding State.Bus3.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            
+            <Border Grid.Column="1" Grid.RowSpan="2" Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Control" Foreground="White" FontSize="20" FontWeight="Bold"/>
+
+                    <Grid Grid.Row="1" Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+                            <StackPanel Orientation="Vertical">
+                                <dx:SimpleButton Content="IP Settings" Height="30" Margin="30,0" Command="{Binding ShowOvrSettingsCommand}"
+                                                 HorizontalAlignment="Stretch" VerticalAlignment="Top"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="22,5,22,5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="BUS Diagram" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" Margin="0,-5,0,0"/>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,35,0,0">
+                        <CheckBox Content="Bus1"
+                                  Margin="0,0,12,0"
+                                  Foreground="#E2E8F0"
+                                  IsChecked="{Binding State.ManualBus.IsBus1Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox Content="Bus2"
+                                  Margin="0,0,12,0"
+                                  Foreground="#E2E8F0"
+                                  IsChecked="{Binding State.ManualBus.IsBus2Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox Content="Bus3"
+                                  Foreground="#E2E8F0"
+                                  IsChecked="{Binding State.ManualBus.IsBus3Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+
+                </Grid>
+                <local:BusDiagramControl Width="1800" Height="540" DataContext="{Binding BusDiagram}"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.3*"/>
+                <ColumnDefinition Width="1.5*"/>
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Margin="22,5,5,5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Log" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="0,-5,0,0"/>
+                        <dx:SimpleButton Grid.Column="1"
+                                     Content="Clear"
+                                     Width="90"
+                                     Height="32"
+                                     Command="{Binding ClearLogsCommand}" Margin="0,-5,0,0"/>
+                    </Grid>
+                    <ListBox Grid.Row="1"
+                         Margin="0,5,0,0"
+                         ItemsSource="{Binding Logs}"
+                         Background="#0B1220"
+                         BorderThickness="0">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="4,2"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#4B5563"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#6B7280"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Foreground="White"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Margin="5,5,22,5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="System" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,-5,0,0"/>
+
+                    <Grid Grid.Row="1" Margin="10,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <DataGrid Grid.Row="1"
+                                  Margin="0,5,0,0"
+                                  Style="{StaticResource OvrDataGridStyle}"
+                                  ColumnHeaderStyle="{StaticResource OvrDataGridHeaderStyle}"
+                                  CellStyle="{StaticResource OvrDataGridCellStyle}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  HeadersVisibility="Column"
+                                  ItemsSource="{Binding State.OvrSettings.Endpoints}"
+                                  GridLinesVisibility="Horizontal"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  RowHeaderWidth="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" IsReadOnly="True" Width="80" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" Width="120" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Width="120" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="Info" Binding="{Binding Info, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Width="*" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.RowSpan="3"
+              Panel.ZIndex="200"
+              Background="#99000000"
+              Visibility="{Binding State.OvrSettings.IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <!--Visibility="Collapsed">-->
+            <Border Width="1000"
+                    Height="600"
+                    Padding="18"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    CornerRadius="16"
+                    Background="#162033"
+                    BorderBrush="#334155"
+                    BorderThickness="1.5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="IP Settings" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Text="Line Simulator connection and OVR1 ~ OVR10, METER1 Modbus TCP settings" Foreground="#94A3B8" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,18,0,18">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Padding="14"
+                                Background="#0F172A"
+                                BorderBrush="#334155"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="Line Simulator" Foreground="White" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <dxe:TextEdit Grid.Column="1" Height="30" Margin="0,0,12,0" EditValue="{Binding State.Connection.IpAddress, UpdateSourceTrigger=PropertyChanged}"/>
+                                <dxe:SpinEdit Grid.Column="3"
+                                              Height="30"
+                                              Margin="0,0,12,0"
+                                              EditValue="{Binding State.Connection.Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              MinValue="1"
+                                              MaxValue="65535"/>
+                                <dxe:SpinEdit Grid.Column="5"
+                                              Height="30"
+                                              Margin="0,0,12,0"
+                                              EditValue="{Binding State.Connection.UnitId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              MinValue="1"
+                                              MaxValue="247"/>
+                                <dx:SimpleButton Grid.Column="6"
+                                                 Content="Connect"
+                                                 Width="100"
+                                                 Height="30"
+                                                 Margin="0,0,8,0"
+                                                 Command="{Binding ConnectCommand}"/>
+                                <dx:SimpleButton Grid.Column="7"
+                                                 Content="Disconnect"
+                                                 Width="100"
+                                                 Height="30"
+                                                 Margin="0,0,12,0"
+                                                 Command="{Binding DisconnectCommand}"/>
+                                <TextBlock Grid.Column="8"
+                                           Text="{Binding State.Connection.IsConnected, StringFormat={}Connected: {0}}"
+                                           Foreground="#E2E8F0"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <DataGrid Grid.Row="1"
+                                  Margin="0,16,0,0"
+                                  Style="{StaticResource OvrDataGridStyle}"
+                                  ColumnHeaderStyle="{StaticResource OvrDataGridHeaderStyle}"
+                                  CellStyle="{StaticResource OvrDataGridCellStyle}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  HeadersVisibility="Column"
+                                  ItemsSource="{Binding State.OvrSettings.Endpoints}"
+                                  GridLinesVisibility="Horizontal"
+                                  RowHeaderWidth="0">
+                            <DataGrid.Columns>
+                                <DataGridCheckBoxColumn Header="Use" Binding="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="55" ElementStyle="{StaticResource OvrDataGridCheckBoxStyle}" EditingElementStyle="{StaticResource OvrDataGridCheckBoxStyle}"/>
+                                <DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" Width="100" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="160" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="Port" Binding="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="70" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="Unit ID" Binding="{Binding UnitId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="70" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="Slave ID" Binding="{Binding SlaveId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="75" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="Current Reg" Binding="{Binding CurrentRegisterAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="95" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="Scale" Binding="{Binding CurrentScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0.###}}" Width="75" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridCheckBoxColumn Header="Input Reg" Binding="{Binding ReadFromInputRegisters, Mode=TwoWay}" Width="75" ElementStyle="{StaticResource OvrDataGridCheckBoxStyle}" EditingElementStyle="{StaticResource OvrDataGridCheckBoxStyle}"/>
+                                <DataGridTextColumn Header="Current" Binding="{Binding CurrentValueText}" IsReadOnly="True" Width="90" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" IsReadOnly="True" Width="*" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <dx:SimpleButton Content="Cancel"
+                                         Width="100"
+                                         Height="34"
+                                         Margin="0,0,8,0"
+                                         Command="{Binding CloseOvrSettingsCommand}"/>
+                        <dx:SimpleButton Content="Apply"
+                                         Width="120"
+                                         Height="34"
+                                         Command="{Binding ApplyOvrSettingsCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

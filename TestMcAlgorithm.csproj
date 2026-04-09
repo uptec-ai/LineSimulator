@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="DevExpress.Data.v24.2">
+      <HintPath>C:\Program Files\DevExpress 24.2\Components\Bin\NetCore\DevExpress.Data.v24.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Mvvm.v24.2">
+      <HintPath>C:\Program Files\DevExpress 24.2\Components\Bin\NetCore\DevExpress.Mvvm.v24.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Core.v24.2">
+      <HintPath>C:\Program Files\DevExpress 24.2\Components\Bin\NetCore\DevExpress.Xpf.Core.v24.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Themes.Office2019Colorful.v24.2">
+      <HintPath>C:\Program Files\DevExpress 24.2\Components\Bin\NetCore\DevExpress.Xpf.Themes.Office2019Colorful.v24.2.dll</HintPath>
+    </Reference>
+    <Reference Include="SciChart.Charting">
+      <HintPath>C:\Users\klmon\.nuget\packages\scichart\8.11.0.28985\lib\net6.0-windows7.0\SciChart.Charting.dll</HintPath>
+    </Reference>
+    <Reference Include="SciChart.Core">
+      <HintPath>C:\Users\klmon\.nuget\packages\scichart\8.11.0.28985\lib\net6.0-windows7.0\SciChart.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SciChart.Data">
+      <HintPath>C:\Users\klmon\.nuget\packages\scichart\8.11.0.28985\lib\net6.0-windows7.0\SciChart.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="SciChart.Drawing">
+      <HintPath>C:\Users\klmon\.nuget\packages\scichart\8.11.0.28985\lib\net6.0-windows7.0\SciChart.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing.Common">
+      <HintPath>C:\Program Files\dotnet\packs\Microsoft.WindowsDesktop.App.Ref\8.0.24\ref\net8.0\System.Drawing.Common.dll</HintPath>
+    </Reference>
+	<Reference Include="DevExpress.Images.v24.2">
+		<HintPath>C:\Program Files\DevExpress 24.2\Components\Bin\NetCore\DevExpress.Images.v24.2.dll</HintPath>
+	</Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="NModbus" Version="3.0.81" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <None Remove="Assets\**\*.*" />
+	  <Resource Include="Assets\**\*.*" />
+  </ItemGroup>
+
+
+</Project>
