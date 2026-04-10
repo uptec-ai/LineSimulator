@@ -155,9 +155,9 @@
                                                     Background="Transparent"
                                                     MouseLeftButtonUp="FeederCanvas_MouseLeftButtonUp">
                                                 <Ellipse Style="{StaticResource ContactDotStyle}"
-                                                  Canvas.Left="17.25"
-                                                 Canvas.Top="{Binding ContactTop}"
-                                                 Fill="{Binding PathBrush}"/>
+                                                         Canvas.Left="17.25"
+                                                         Canvas.Top="{Binding ContactTop}"
+                                                         Fill="{Binding PathBrush}"/>
                                                 <Line X1="20"
                                                       Y1="{Binding ConnectionY}"
                                                       X2="20"

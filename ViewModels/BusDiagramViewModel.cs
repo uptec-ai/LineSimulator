@@ -67,19 +67,19 @@ namespace TestMcAlgorithm.ViewModels
 
             Outputs =
             [
-                new BusOutputItem("BUS OUT #1", 775, 34, 111, OutputPathBrush),
-                new BusOutputItem("BUS OUT #2", 915, 34, 111, OutputPathBrush),
-                new BusOutputItem("BUS OUT #3", 1125, 34, 111, OutputPathBrush),
+                new BusOutputItem("BUS OUT #1", 745, 34, 111, OutputPathBrush),
+                new BusOutputItem("BUS OUT #2", 885, 34, 111, OutputPathBrush),
+                new BusOutputItem("BUS OUT #3", 1095, 34, 111, OutputPathBrush),
 
-                new BusOutputItem("NBUS OUT #1", 1424, 34, 111, OutputPathBrush),
-                new BusOutputItem("NBUS OUT #2", 1566, 34, 111, OutputPathBrush),
-                new BusOutputItem("NBUS OUT #3", 1740, 34, 111, OutputPathBrush)
+                new BusOutputItem("NBUS OUT #1", 1354, 34, 111, OutputPathBrush),
+                new BusOutputItem("NBUS OUT #2", 1496, 34, 111, OutputPathBrush),
+                new BusOutputItem("NBUS OUT #3", 1670, 34, 111, OutputPathBrush)
             ];
 
             Sections =
             [
                 new BusSectionItem(
-                left: 30,
+                left: 0,
                 top: 145,
                 width: 1365,
                 currentLabel: "100A",
@@ -117,9 +117,9 @@ namespace TestMcAlgorithm.ViewModels
                 defaultBrush: DefaultPathBrush),
 
             new BusSectionItem(
-                left: 1470,
+                left: 1400,
                 top: 145,
-                width: 550,
+                width: 520,
                 currentLabel: "63A",
                 inputLabel: "NBUS IN",
                 outRails: CreateNOutRails(170),
@@ -137,7 +137,7 @@ namespace TestMcAlgorithm.ViewModels
                 inputStemY: 315,
                 inputArriveY: 345,
                 showMcMarker: false,
-                _margin: new Thickness(0,345,0,0),
+                _margin: new Thickness(30,345,0,0),
                 defaultBrush: DefaultPathBrush)
             ];
         }
@@ -233,7 +233,7 @@ namespace TestMcAlgorithm.ViewModels
                         315,
                         activeFeeder.CenterX,
                         315,
-                        3,
+                        2,
                         HighlightBrush));
 
                 section.HighlightSegments.Add(

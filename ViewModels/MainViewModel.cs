@@ -60,7 +60,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         ConnectCommand = new AsyncRelayCommand(_ => ConnectAsync(), _ => !State.Connection.IsConnected);
         DisconnectCommand = new AsyncRelayCommand(_ => DisconnectAsync(), _ => State.Connection.IsConnected);
-        CalculatePlanCommand = new RelayCommand(_ => CalculatePlan());
         ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
         ShowOvrSettingsCommand = new RelayCommand(_ => State.OvrSettings.IsVisible = true);
         CloseOvrSettingsCommand = new RelayCommand(_ => State.OvrSettings.IsVisible = false);
@@ -76,6 +75,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         RefreshBusAvailability();
         SyncBusDiagramFeedback();
         InitializeEndpointDefaults();
+        AutoCalculatePlan();
         StartIdleMonitor();
     }
 
@@ -117,7 +117,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public AsyncRelayCommand ConnectCommand { get; }
     public AsyncRelayCommand DisconnectCommand { get; }
-    public RelayCommand CalculatePlanCommand { get; }
     public RelayCommand ClearLogsCommand { get; }
     public RelayCommand ShowOvrSettingsCommand { get; }
     public RelayCommand CloseOvrSettingsCommand { get; }
@@ -173,6 +172,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             _currentPlan = null;
             RefreshBusAvailability();
+            AutoCalculatePlan();
         }
     }
 
@@ -194,6 +194,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
                 RefreshBus3Availability();
                 RaiseBusCommandCanExecuteChanged();
+                AutoCalculatePlan();
                 break;
 
             case nameof(BusSelectionModel.IsApplied):
@@ -204,11 +205,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 _currentPlan = null;
                 RefreshBus2ScrOptionsOnly();
                 RefreshBus3Availability();
+                AutoCalculatePlan();
                 break;
 
             case nameof(BusSelectionModel.Scr):
                 _currentPlan = null;
                 RefreshBus3Availability();
+                AutoCalculatePlan();
                 break;
         }
     }
@@ -231,6 +234,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
                 _currentPlan = null;
                 RaiseBusCommandCanExecuteChanged();
+                AutoCalculatePlan();
                 break;
 
             case nameof(BusSelectionModel.IsApplied):
@@ -240,10 +244,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             case nameof(BusSelectionModel.RatedKva):
                 _currentPlan = null;
                 RefreshBus3ScrOptionsOnly();
+                AutoCalculatePlan();
                 break;
 
             case nameof(BusSelectionModel.Scr):
                 _currentPlan = null;
+                AutoCalculatePlan();
                 break;
         }
     }
@@ -281,14 +287,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         await DisconnectCoreAsync("Disconnected", stopPolling: true);
     }
 
-    // 계산 버튼
-    private void CalculatePlan()
+    private void CalculatePlan(bool writeLog = true)
     {
         try
         {
             _currentPlan = BuildPlan();
             ApplyPlanToView(_currentPlan);
-            AddLog("Algorithm plan calculated.");
+            if (writeLog)
+            {
+                AddLog("Algorithm plan calculated.");
+            }
         }
         catch (Exception ex)
         {
@@ -296,8 +304,21 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             State.Bus2.Summary = BuildBusSummary("BUS2", null, State.Bus2.IsEnabled);
             State.Bus3.Summary = BuildBusSummary("BUS3", null, State.Bus3.IsEnabled);
             State.AlgorithmSummary = ex.Message;
-            AddLog($"Calculate failed: {ex.Message}");
+            if (writeLog)
+            {
+                AddLog($"Calculate failed: {ex.Message}");
+            }
         }
+    }
+
+    private void AutoCalculatePlan()
+    {
+        if (_isRefreshingSelections)
+        {
+            return;
+        }
+
+        CalculatePlan(writeLog: false);
     }
 
     private async Task TurnBusOnAsync(string busName)
