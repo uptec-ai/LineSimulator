@@ -10,6 +10,8 @@ namespace TestMcAlgorithm.ViewModels;
 
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
+    public double SampleValue { get; set; } = 123.0;
+
     private const ushort LineRegisterStartAddress = 0;
     private const ushort LineRegisterCount = 10;
     private const ushort EndpointRegisterStartAddress = 476;
@@ -429,14 +431,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            var isNBus = kItem.TargetBus.StartsWith("NBUS", StringComparison.Ordinal);
-            var operationBus = isNBus ? kItem.TargetBus : State.ManualBus.SelectedBusName;
-
-            if (!isNBus && !string.Equals(kItem.TargetBus, operationBus, StringComparison.Ordinal))
-            {
-                AddLog($"{kCode} manual control blocked: selected bus is {operationBus}, target is {kItem.TargetBus}.");
-                return;
-            }
+            var operationBus = kItem.TargetBus;
 
             if (kItem.IsOn)
             {
@@ -446,6 +441,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                     AddLog($"{kCode} manual off completed.");
                 }
 
+                return;
+            }
+
+            var interlockedPeer = FindInterlockedPeer(kItem);
+            if (interlockedPeer is not null)
+            {
+                AddLog($"{kCode} manual on blocked: {interlockedPeer.Code} is already ON for MC{interlockedPeer.Definition.SourceMcNumber}.");
                 return;
             }
 
@@ -718,6 +720,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             }
             else
             {
+                kItem.IsOn = state;
+                SyncBusDiagramFeedback();
                 AddLog($"{reason}: {kItem.Code} -> {(state ? "ON" : "OFF")} [simulation]");
             }
         }
@@ -812,6 +816,24 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         AddLog($"{kItem.Code} off feedback retry exhausted. Alarm coil {AlarmCoilAddress} -> ON");
         //await WriteAlarmCoilAsync();
         return false;
+    }
+
+    private KContactViewModel? FindInterlockedPeer(KContactViewModel target)
+    {
+        if (!IsSharedMc(target.Definition.SourceMcNumber))
+        {
+            return null;
+        }
+
+        return KItems.FirstOrDefault(item =>
+            !ReferenceEquals(item, target) &&
+            item.Definition.SourceMcNumber == target.Definition.SourceMcNumber &&
+            item.IsOn);
+    }
+
+    private static bool IsSharedMc(int sourceMcNumber)
+    {
+        return McCatalog.ByNumber.TryGetValue(sourceMcNumber, out var definition) && definition.IsShared;
     }
 
     private void AddLog(string message)

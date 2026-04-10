@@ -43,12 +43,24 @@
 
   <ItemGroup>
 	  <PackageReference Include="NModbus" Version="3.0.81" />
+	  <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
+	  <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
+	  <PackageReference Include="System.Text.Encodings.Web" Version="10.0.5" />
+	  <PackageReference Include="System.Text.Json" Version="10.0.5" />
+	  <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 
   <ItemGroup>
 	  <None Remove="Assets\**\*.*" />
 	  <Resource Include="Assets\**\*.*" />
+	  <None Remove="Fonts\Jalnan2.otf" />
+	  <None Remove="Fonts\NanumSquareRoundR.ttf" />
+	  <None Remove="Fonts\NotoSansKR-Regular.ttf" />
+	  <None Remove="Fonts\Open 24 Display St.ttf" />
+	  <Resource Include="Fonts\Jalnan2.otf" />
+	  <Resource Include="Fonts\NanumSquareRoundR.ttf" />
+	  <Resource Include="Fonts\NotoSansKR-Regular.ttf" />
+	  <Resource Include="Fonts\Open 24 Display St.ttf" />
   </ItemGroup>
-
 
 </Project>
