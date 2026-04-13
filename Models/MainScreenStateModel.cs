@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using TestMcAlgorithm.ViewModels;
 
 namespace TestMcAlgorithm.Models;
@@ -38,6 +39,7 @@ public sealed class BusSelectionModel : ObservableObject
 {
     private bool _isEnabled;
     private bool _isApplied;
+    private bool _isConfigurationLocked;
     private double _ratedKva;
     private double _scr;
     private string _summary;
@@ -65,6 +67,12 @@ public sealed class BusSelectionModel : ObservableObject
         set => SetProperty(ref _isApplied, value);
     }
 
+    public bool IsConfigurationLocked
+    {
+        get => _isConfigurationLocked;
+        set => SetProperty(ref _isConfigurationLocked, value);
+    }
+
     public double RatedKva
     {
         get => _ratedKva;
@@ -90,16 +98,101 @@ public sealed class MainScreenStateModel : ObservableObject
 
     public ConnectionSettingsModel Connection { get; } = new();
     public OvrSettingsDialogModel OvrSettings { get; } = new();
+    public DeviceDetailDialogModel DeviceDetail { get; } = new();
     public BusSelectionModel Bus1 { get; } = new("BUS1", true, 250, 3);
     public BusSelectionModel Bus2 { get; } = new("BUS2", true, 100, 5);
     public BusSelectionModel Bus3 { get; } = new("BUS3", true, 50, 2);
     public ManualBusSelectionModel ManualBus { get; } = new();
+    public OperationModeModel OperationMode { get; } = new();
 
     public string AlgorithmSummary
     {
         get => _algorithmSummary;
         set => SetProperty(ref _algorithmSummary, value);
     }
+}
+
+public sealed class DeviceDetailDialogModel : ObservableObject
+{
+    private bool _isVisible;
+    private string _title = "Device Detail";
+    private string _subtitle = "-";
+    private string _currentText = "-";
+    private string _statusText = "-";
+    private string _infoText = "-";
+
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set => SetProperty(ref _isVisible, value);
+    }
+
+    public string Title
+    {
+        get => _title;
+        set => SetProperty(ref _title, value);
+    }
+
+    public string Subtitle
+    {
+        get => _subtitle;
+        set => SetProperty(ref _subtitle, value);
+    }
+
+    public string CurrentText
+    {
+        get => _currentText;
+        set => SetProperty(ref _currentText, value);
+    }
+
+    public string StatusText
+    {
+        get => _statusText;
+        set => SetProperty(ref _statusText, value);
+    }
+
+    public string InfoText
+    {
+        get => _infoText;
+        set => SetProperty(ref _infoText, value);
+    }
+
+    public ObservableCollection<DeviceRegisterRowModel> Registers { get; } = [];
+}
+
+public sealed class DeviceRegisterRowModel
+{
+    public DeviceRegisterRowModel(int index, ushort address, ushort value)
+    {
+        Index = index;
+        Address = address;
+        Value = value;
+    }
+
+    public int Index { get; }
+
+    public ushort Address { get; }
+
+    public ushort Value { get; }
+}
+
+public sealed class OperationModeModel : ObservableObject
+{
+    private bool _isManualMode;
+
+    public bool IsManualMode
+    {
+        get => _isManualMode;
+        set
+        {
+            if (SetProperty(ref _isManualMode, value))
+            {
+                RaisePropertyChanged(nameof(IsAutoMode));
+            }
+        }
+    }
+
+    public bool IsAutoMode => !_isManualMode;
 }
 
 public sealed class ManualBusSelectionModel : ObservableObject

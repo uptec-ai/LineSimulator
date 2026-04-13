@@ -34,17 +34,21 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private Task? _idleMonitorTask;
     private bool _isShuttingDown;
     private bool _feedbackReadFailed;
+    private bool _isRevertingOperationMode;
 
     private IReadOnlyList<BusRequestSpec> _availableBus2Requests = [];
     private IReadOnlyList<BusRequestSpec> _availableBus3Requests = [];
     private AlgorithmPlan? _currentPlan;
 
+    #region MainWindow Composition
     public MainViewModel(McAlgorithmService algorithmService, IModbusGatewayService modbusGatewayService)
     {
         _algorithmService = algorithmService;
         _modbusGatewayService = modbusGatewayService;
         BusDiagram = new BusDiagram();
         BusDiagram.KBusClickRequestedAsync = HandleDiagramKBusClickAsync;
+        BusDiagram.OutputClickRequestedAsync = HandleDiagramOutputClickAsync;
+        BusDiagram.MarkerClickRequestedAsync = HandleDiagramMarkerClickAsync;
         State = new MainScreenStateModel();
 
         McItems = new ObservableCollection<McButtonViewModel>(McCatalog.All.Select(definition => new McButtonViewModel(definition)));
@@ -63,7 +67,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
         ShowOvrSettingsCommand = new RelayCommand(_ => State.OvrSettings.IsVisible = true);
         CloseOvrSettingsCommand = new RelayCommand(_ => State.OvrSettings.IsVisible = false);
+        CloseDeviceDetailCommand = new RelayCommand(_ => State.DeviceDetail.IsVisible = false);
         ApplyOvrSettingsCommand = new AsyncRelayCommand(_ => ApplyOvrSettingsAsync());
+
         Bus1ApplyCommand = new AsyncRelayCommand(_ => TurnBusOnAsync("BUS1"), _ => CanApplyBus("BUS1"));
         Bus2ApplyCommand = new AsyncRelayCommand(_ => TurnBusOnAsync("BUS2"), _ => CanApplyBus("BUS2"));
         Bus3ApplyCommand = new AsyncRelayCommand(_ => TurnBusOnAsync("BUS3"), _ => CanApplyBus("BUS3"));
@@ -78,20 +84,22 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         AutoCalculatePlan();
         StartIdleMonitor();
     }
+    #endregion
 
+    #region EndPoint Defaults
     private void InitializeEndpointDefaults()
     {
 
-        State.OvrSettings.Endpoints[0].IpAddress = "192.168.1.10"; // ocr1
-        State.OvrSettings.Endpoints[1].IpAddress = "192.168.1.11"; // ocr2
-        State.OvrSettings.Endpoints[2].IpAddress = "192.168.1.12"; // ocr3
-        State.OvrSettings.Endpoints[3].IpAddress = "192.168.1.13"; // ocr4
-        State.OvrSettings.Endpoints[4].IpAddress = "192.168.1.14"; // ocr5
-        State.OvrSettings.Endpoints[5].IpAddress = "192.168.1.15"; // ocr6
-        State.OvrSettings.Endpoints[6].IpAddress = "192.168.1.16"; // ocr7
-        State.OvrSettings.Endpoints[7].IpAddress = "192.168.1.17"; // ocr8
-        State.OvrSettings.Endpoints[8].IpAddress = "192.168.1.18"; // ocr9
-        State.OvrSettings.Endpoints[9].IpAddress = "192.168.1.19"; // ocr10
+        State.OvrSettings.Endpoints[0].IpAddress = "192.168.1.10"; // ovr1
+        State.OvrSettings.Endpoints[1].IpAddress = "192.168.1.11"; // ovr2
+        State.OvrSettings.Endpoints[2].IpAddress = "192.168.1.12"; // ovr3
+        State.OvrSettings.Endpoints[3].IpAddress = "192.168.1.13"; // ovr4
+        State.OvrSettings.Endpoints[4].IpAddress = "192.168.1.14"; // ovr5
+        State.OvrSettings.Endpoints[5].IpAddress = "192.168.1.15"; // ovr6
+        State.OvrSettings.Endpoints[6].IpAddress = "192.168.1.16"; // ovr7
+        State.OvrSettings.Endpoints[7].IpAddress = "192.168.1.17"; // ovr8
+        State.OvrSettings.Endpoints[8].IpAddress = "192.168.1.18"; // ovr9
+        State.OvrSettings.Endpoints[9].IpAddress = "192.168.1.19"; // ovr10
 
         State.OvrSettings.Endpoints[10].IpAddress = "192.168.1.20";// bus in Meter계
         State.OvrSettings.Endpoints[11].IpAddress = "192.168.1.21";// bus out1 Meter계
@@ -104,6 +112,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             endpoint.CurrentScale = 0.01; // 기본적으로 전류값이 읽히는 레지스터 주소
         }
     }
+    #endregion
+
+    #region MainWindow State / Commands
     public MainScreenStateModel State { get; }
     public ObservableCollection<McButtonViewModel> McItems { get; }
     public ObservableCollection<KContactViewModel> KItems { get; }
@@ -115,11 +126,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<double> Bus3RatedOptions { get; }
     public ObservableCollection<double> Bus3ScrOptions { get; }
 
+    public bool CanEditBus1Settings => State.OperationMode.IsAutoMode && !State.Bus1.IsConfigurationLocked;
+    public bool CanEditBus2Settings => State.OperationMode.IsAutoMode && State.Bus2.IsEnabled && !State.Bus2.IsConfigurationLocked;
+    public bool CanEditBus3Settings => State.OperationMode.IsAutoMode && State.Bus3.IsEnabled && !State.Bus3.IsConfigurationLocked;
+    public bool CanEditBus2Usage => State.OperationMode.IsAutoMode && !State.Bus2.IsConfigurationLocked;
+    public bool CanEditBus3Usage => State.OperationMode.IsAutoMode && State.Bus2.IsEnabled && !State.Bus3.IsConfigurationLocked;
+
     public AsyncRelayCommand ConnectCommand { get; }
     public AsyncRelayCommand DisconnectCommand { get; }
     public RelayCommand ClearLogsCommand { get; }
     public RelayCommand ShowOvrSettingsCommand { get; }
     public RelayCommand CloseOvrSettingsCommand { get; }
+    public RelayCommand CloseDeviceDetailCommand { get; }
     public AsyncRelayCommand ApplyOvrSettingsCommand { get; }
     public AsyncRelayCommand Bus1ApplyCommand { get; }
     public AsyncRelayCommand Bus2ApplyCommand { get; }
@@ -137,6 +155,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         State.Bus1.PropertyChanged += OnBus1PropertyChanged;
         State.Bus2.PropertyChanged += OnBus2PropertyChanged;
         State.Bus3.PropertyChanged += OnBus3PropertyChanged;
+        State.OperationMode.PropertyChanged += OnOperationModePropertyChanged;
     }
 
     private void UnsubscribeStateEvents()
@@ -145,6 +164,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         State.Bus1.PropertyChanged -= OnBus1PropertyChanged;
         State.Bus2.PropertyChanged -= OnBus2PropertyChanged;
         State.Bus3.PropertyChanged -= OnBus3PropertyChanged;
+        State.OperationMode.PropertyChanged -= OnOperationModePropertyChanged;
     }
 
     private void OnConnectionPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -153,7 +173,33 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             ConnectCommand.RaiseCanExecuteChanged();
             DisconnectCommand.RaiseCanExecuteChanged();
+            RaiseBusCommandCanExecuteChanged();
         }
+    }
+
+    private void OnOperationModePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(OperationModeModel.IsManualMode))
+        {
+            return;
+        }
+
+        if (_isRevertingOperationMode)
+        {
+            return;
+        }
+
+        if (!AreAllBusOutputsOpen())
+        {
+            _isRevertingOperationMode = true;
+            State.OperationMode.IsManualMode = !State.OperationMode.IsManualMode;
+            _isRevertingOperationMode = false;
+            MessageBox.Show($"투입된 버스를 먼저 해제하세요.", "동작 모드 변경", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        RaiseModeAndConfigurationStateChanged();
+        AddLog($"Operation mode changed: {(State.OperationMode.IsManualMode ? "Manual" : "Auto")}");
     }
 
     private void OnBus1PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -161,6 +207,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (e.PropertyName == nameof(BusSelectionModel.IsApplied))
         {
             RaiseBusCommandCanExecuteChanged();
+        }
+
+        if (e.PropertyName == nameof(BusSelectionModel.IsConfigurationLocked))
+        {
+            RaiseModeAndConfigurationStateChanged();
         }
 
         if (_isRefreshingSelections)
@@ -193,12 +244,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 }
 
                 RefreshBus3Availability();
-                RaiseBusCommandCanExecuteChanged();
+                RaiseModeAndConfigurationStateChanged();
                 AutoCalculatePlan();
                 break;
 
             case nameof(BusSelectionModel.IsApplied):
                 RaiseBusCommandCanExecuteChanged();
+                break;
+
+            case nameof(BusSelectionModel.IsConfigurationLocked):
+                RaiseModeAndConfigurationStateChanged();
                 break;
 
             case nameof(BusSelectionModel.RatedKva):
@@ -233,12 +288,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 }
 
                 _currentPlan = null;
-                RaiseBusCommandCanExecuteChanged();
+                RaiseModeAndConfigurationStateChanged();
                 AutoCalculatePlan();
                 break;
 
             case nameof(BusSelectionModel.IsApplied):
                 RaiseBusCommandCanExecuteChanged();
+                break;
+
+            case nameof(BusSelectionModel.IsConfigurationLocked):
+                RaiseModeAndConfigurationStateChanged();
                 break;
 
             case nameof(BusSelectionModel.RatedKva):
@@ -254,6 +313,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    #endregion
+
+    #region LineSimulator Connection
     private async Task ConnectAsync()
     {
         try
@@ -286,7 +348,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         await DisconnectCoreAsync("Disconnected", stopPolling: true);
     }
+    #endregion
 
+    #region MainWindow Bus Planning / Operations
     private void CalculatePlan(bool writeLog = true)
     {
         try
@@ -327,6 +391,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         try
         {
+            if (!State.Connection.IsConnected)
+            {
+                AddLog($"{busName} apply blocked: Line Simulator disconnected.");
+                return;
+            }
+
             try
             {
                 _currentPlan ??= BuildPlan();
@@ -350,6 +420,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
+            SetBusConfigurationLocked(busName, true);
+
             var selected = target.McNumbers.ToHashSet();
             var selectedByAnyBus = _currentPlan.OrderedTurnOnNumbers.ToHashSet();
 
@@ -359,6 +431,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 var cleared = await TurnKOffWithFeedbackCheckAsync(kItem, $"Algorithm clear {kItem.Code}");
                 if (!cleared)
                 {
+                    SetBusConfigurationLocked(busName, false);
                     AddLog($"{busName} apply aborted: {kItem.Code} clear feedback not confirmed.");
                     return;
                 }
@@ -370,6 +443,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 var applied = await ApplyKWithFeedbackCheckAsync(kItem, busName);
                 if (!applied)
                 {
+                    SetBusConfigurationLocked(busName, false);
                     AddLog($"{busName} apply aborted: {kItem.Code} feedback not confirmed.");
                     return;
                 }
@@ -392,6 +466,20 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             "BUS2" => plan.Bus2,
             "BUS3" => plan.Bus3,
             _ => null,
+        };
+    }
+
+    private static string? ResolveOutputTargetBus(string outputTitle)
+    {
+        return outputTitle switch
+        {
+            "BUS OUT #1" => "BUS1",
+            "BUS OUT #2" => "BUS2",
+            "BUS OUT #3" => "BUS3",
+            "NBUS OUT #1" => "NBUS1",
+            "NBUS OUT #2" => "NBUS2",
+            "NBUS OUT #3" => "NBUS3",
+            _ => null
         };
     }
 
@@ -426,6 +514,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             }
 
             _currentPlan = null;
+            SetBusConfigurationLocked(busName, false);
             SetBusApplied(busName, false);
             AddLog($"{busName} off sequence completed.");
         }
@@ -445,6 +534,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         try
         {
+            if (!State.Connection.IsConnected)
+            {
+                AddLog($"{kCode} manual control blocked: Line Simulator disconnected.");
+                return;
+            }
+
+            if (!State.OperationMode.IsManualMode)
+            {
+                AddLog($"{kCode} manual control blocked: switch to Manual mode first.");
+                return;
+            }
+
             var kItem = KItems.FirstOrDefault(item => string.Equals(item.Code, kCode, StringComparison.OrdinalIgnoreCase));
             if (kItem is null)
             {
@@ -453,6 +554,19 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             }
 
             var operationBus = kItem.TargetBus;
+
+            var actionText = kItem.IsOn ? "해제" : "동작";
+            var confirmationResult = MessageBox.Show(
+                $"{kCode} 버스를 {actionText} 하시겠습니까?",
+                "수동 동작 확인",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Question);
+
+            if (confirmationResult != MessageBoxResult.OK)
+            {
+                AddLog($"{kCode} manual control cancelled by user.");
+                return;
+            }
 
             if (kItem.IsOn)
             {
@@ -477,6 +591,97 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             {
                 AddLog($"{kCode} manual on completed.");
             }
+        }
+        finally
+        {
+            EndBusOperation();
+        }
+    }
+
+    private Task HandleDiagramMarkerClickAsync(string deviceKey)
+    {
+        try
+        {
+            var endpoint = FindEndpointOrThrow(deviceKey);
+            PopulateDeviceDetail(endpoint);
+            State.DeviceDetail.IsVisible = true;
+            AddLog($"{endpoint.DeviceKey} detail opened.");
+        }
+        catch (Exception ex)
+        {
+            AddLog($"Device detail open failed: {ex.Message}");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void PopulateDeviceDetail(OvrEndpointSettingsModel endpoint)
+    {
+        State.DeviceDetail.Title = $"{endpoint.DeviceKey} Detail";
+        State.DeviceDetail.Subtitle = $"{endpoint.Name} / {endpoint.IpAddress}:{endpoint.Port}";
+        State.DeviceDetail.CurrentText = endpoint.CurrentValueText;
+        State.DeviceDetail.StatusText = endpoint.Status.ToString();
+        State.DeviceDetail.InfoText = string.IsNullOrWhiteSpace(endpoint.Info) ? "-" : endpoint.Info;
+        State.DeviceDetail.Registers.Clear();
+
+        for (var index = 0; index < endpoint.RegisterSnapshot.Count; index++)
+        {
+            var address = (ushort)(EndpointRegisterStartAddress + index);
+            State.DeviceDetail.Registers.Add(new DeviceRegisterRowModel(index, address, endpoint.RegisterSnapshot[index]));
+        }
+    }
+
+    private async Task HandleDiagramOutputClickAsync(string outputTitle)
+    {
+        if (!TryBeginBusOperation())
+        {
+            AddLog($"Manual output control skipped: another operation is running.");
+            return;
+        }
+
+        try
+        {
+            if (!State.Connection.IsConnected)
+            {
+                AddLog($"{outputTitle} manual off blocked: Line Simulator disconnected.");
+                return;
+            }
+
+            if (!State.OperationMode.IsManualMode)
+            {
+                AddLog($"{outputTitle} manual off blocked: switch to Manual mode first.");
+                return;
+            }
+
+            var targetBus = ResolveOutputTargetBus(outputTitle);
+            if (targetBus is null)
+            {
+                AddLog($"{outputTitle} manual off skipped: output mapping not found.");
+                return;
+            }
+
+            var targetItems = KItems
+                .Where(item => string.Equals(item.TargetBus, targetBus, StringComparison.OrdinalIgnoreCase) && item.IsOn)
+                .OrderByDescending(item => item.Definition.CoilAddress)
+                .ToArray();
+
+            if (targetItems.Length == 0)
+            {
+                AddLog($"{outputTitle} manual off skipped: no active K found.");
+                return;
+            }
+
+            foreach (var kItem in targetItems)
+            {
+                var turnedOff = await TurnKOffWithFeedbackCheckAsync(kItem, $"{targetBus} manual output off");
+                if (!turnedOff)
+                {
+                    AddLog($"{outputTitle} manual off aborted: {kItem.Code} feedback not confirmed.");
+                    return;
+                }
+            }
+
+            AddLog($"{outputTitle} manual off completed.");
         }
         finally
         {
@@ -692,12 +897,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             return $"{busName}: disable";
         }
-
         var kCodes = result.McNumbers
             .Select(number => KCatalog.ByMcBus.TryGetValue((number, busName), out var definition) ? definition.Code : $"MC{number}")
             .ToArray();
 
-        return $"{busName} 투입: {string.Join(", ", kCodes)}";
+        return $"투입: {string.Join(", ", kCodes)} / Zinq: {result.ZeqMohm.ToString("0.0")} mΩ";
     }
 
     private void ClearAssignments()
@@ -730,21 +934,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
-            if (State.Connection.IsConnected)
-            {
-                await WriteSingleCoilAsync(
-                      (byte)State.Connection.UnitId,
-                      kItem.Definition.CoilAddress,
-                      state,
-                      CancellationToken.None);
-                AddLog($"{reason}: {kItem.Code} -> {(state ? "ON" : "OFF")} (coil {kItem.Definition.CoilAddress})");
-            }
-            else
-            {
-                kItem.IsOn = state;
-                SyncBusDiagramFeedback();
-                AddLog($"{reason}: {kItem.Code} -> {(state ? "ON" : "OFF")} [simulation]");
-            }
+            await WriteSingleCoilAsync(
+                  (byte)State.Connection.UnitId,
+                  kItem.Definition.CoilAddress,
+                  state,
+                  CancellationToken.None);
+            AddLog($"{reason}: {kItem.Code} -> {(state ? "ON" : "OFF")} (coil {kItem.Definition.CoilAddress})");
         }
         catch (Exception ex)
         {
@@ -761,8 +956,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         if (!State.Connection.IsConnected)
         {
-            await SetKStateAsync(kItem, true, $"{busName} apply", delayAfter: true);
-            return true;
+            AddLog($"{busName} apply blocked: Line Simulator disconnected.");
+            return false;
         }
 
         for (var attempt = 1; attempt <= MaxApplyFeedbackRetryCount; attempt++)
@@ -803,8 +998,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         if (!State.Connection.IsConnected)
         {
-            await SetKStateAsync(kItem, false, reason, delayAfter: true);
-            return true;
+            AddLog($"{reason}: Line Simulator disconnected.");
+            return false;
         }
 
         for (var attempt = 1; attempt <= MaxApplyFeedbackRetryCount; attempt++)
@@ -868,7 +1063,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private bool CanApplyBus(string busName)
     {
-        if (_isBusOperationRunning)
+        if (_isBusOperationRunning || !State.Connection.IsConnected || State.OperationMode.IsManualMode)
         {
             return false;
         }
@@ -914,11 +1109,30 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private void SetBusConfigurationLocked(string busName, bool isLocked)
+    {
+        switch (busName)
+        {
+            case "BUS1":
+                State.Bus1.IsConfigurationLocked = isLocked;
+                break;
+            case "BUS2":
+                State.Bus2.IsConfigurationLocked = isLocked;
+                break;
+            case "BUS3":
+                State.Bus3.IsConfigurationLocked = isLocked;
+                break;
+        }
+    }
+
     private void ResetBusAppliedFlags()
     {
         State.Bus1.IsApplied = false;
         State.Bus2.IsApplied = false;
         State.Bus3.IsApplied = false;
+        State.Bus1.IsConfigurationLocked = false;
+        State.Bus2.IsConfigurationLocked = false;
+        State.Bus3.IsConfigurationLocked = false;
     }
 
     private bool TryBeginBusOperation()
@@ -939,6 +1153,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         RaiseBusCommandCanExecuteChanged();
     }
 
+    #endregion
+
+    #region Shared Lifecycle
     public void RequestShutdown()
     {
         if (_isShuttingDown)
@@ -951,7 +1168,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _ovrPollingCts?.Cancel();
         _idleMonitorCts?.Cancel();
     }
+    #endregion
 
+    #region EndPoint Idle Monitor
     private void StartIdleMonitor()
     {
         if (_idleMonitorTask is { IsCompleted: false })
@@ -1103,6 +1322,55 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    // OVR/PM이 활성화된 엔드포인트가 하나라도 있으면 이 루프가 실행되어 OVR/PM 폴링을 수행함
+    private async Task PollOvrLoopAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+
+        await RefreshOvrCurrentsAsync(cancellationToken);
+
+        while (await timer.WaitForNextTickAsync(cancellationToken))
+        {
+            await RefreshOvrCurrentsAsync(cancellationToken);
+        }
+    }
+    private async Task RefreshOvrCurrentsAsync(CancellationToken cancellationToken)
+    {
+        // OVR/PM이 활성화된 엔드포인트는 ReadEndpointRegistersAsync에서 실제 OVR/PM 폴링을 수행하여 상태를 업데이트하고, 비활성화된 엔드포인트는 기존에 Idle/Disable 상태를 유지하면서 현재값은 null로 반환함
+        var snapshots = await Task.WhenAll(State.OvrSettings.Endpoints.Select(endpoint => ReadEndpointRegistersAsync(endpoint, cancellationToken)));
+        // OVR/PM이 활성화된 엔드포인트는 폴링 결과로 상태와 현재값이 업데이트되고, 비활성화된 엔드포인트는 기존 상태 유지하면서 현재값은 null로 업데이트되어 뷰에 반영됨
+        await ApplyOvrSnapshotsAsync(snapshots); 
+    }
+    private async Task<EndpointReadSnapshot> ReadEndpointRegistersAsync(OvrEndpointSettingsModel endpoint, CancellationToken cancellationToken)
+    {
+        await endpoint.IoLock.WaitAsync(cancellationToken);
+        try
+        {
+            return await ReadEndpointSnapshotCoreAsync(endpoint, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            try
+            {
+                await endpoint.Socket.DisconnectAsync();
+            }
+            catch
+            {
+                // ignore endpoint shutdown errors
+            }
+
+            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
+        }
+        finally
+        {
+            endpoint.IoLock.Release();
+        }
+    }
+    // OVR/PM이 활성화된 엔드포인트가 하나라도 있으면 OVR/PM 폴링을 시작하고, 그렇지 않으면 폴링을 중지하는 메서드.
     private async Task RestartOvrPollingAsync()
     {
         await StopOvrPollingAsync(disconnectSockets: false);
@@ -1160,18 +1428,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task PollOvrLoopAsync(CancellationToken cancellationToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+    #endregion
 
-        await RefreshOvrCurrentsAsync(cancellationToken);
-
-        while (await timer.WaitForNextTickAsync(cancellationToken))
-        {
-            await RefreshOvrCurrentsAsync(cancellationToken);
-        }
-    }
-    #region OCR / PM Communication
+    #region EndPoint Communication
     private async Task ApplyOvrSettingsAsync()
     {
         State.OvrSettings.IsVisible = false;
@@ -1197,12 +1456,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         await RestartOvrPollingAsync();
     }
 
-    private async Task RefreshOvrCurrentsAsync(CancellationToken cancellationToken)
-    {
-        var snapshots = await Task.WhenAll(State.OvrSettings.Endpoints.Select(endpoint => ReadEndpointRegistersAsync(endpoint, cancellationToken)));
-        await ApplyOvrSnapshotsAsync(snapshots);
-    }
-
     private void ResetOvrEndpointStates()
     {
         foreach (var endpoint in State.OvrSettings.Endpoints)
@@ -1223,6 +1476,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         var dispatcher = Application.Current?.Dispatcher;
         if (dispatcher is null || dispatcher.CheckAccess())
         {
+            // 폴링 루프에서 이미 백그라운드 스레드이므로, 현재 스레드가 UI 스레드인지 확인하여 UI 스레드가 아니면 디스패처를 통해 UI 업데이트를 수행함
             ApplyOvrSnapshots(snapshots);
             return;
         }
@@ -1240,8 +1494,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         foreach (var snapshot in snapshots)
         {
-            snapshot.Endpoint.ApplyReadResult(snapshot.IsConnected, snapshot.CurrentValue, snapshot.StatusText, snapshot.Registers);
-            snapshot.Endpoint.Info = snapshot.Info;
+            // 각 스냅샷의 연결 상태, 현재값, 상태 텍스트, 레지스터 값을 엔드포인트에 적용하여 뷰에 반영함
+            snapshot.Endpoint.ApplyReadResult(snapshot.IsConnected, snapshot.CurrentValue, snapshot.Status, snapshot.Registers);
             currentValues[snapshot.Endpoint.DeviceKey] = snapshot.CurrentValue;
         }
 
@@ -1249,6 +1503,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 
     #endregion
+
+    #region EndPoint Register Access
     public async Task WriteOvrEndpointRegisterAsync(string endpointName, ushort registerAddress, ushort value, CancellationToken cancellationToken = default) // Write Single Register
     {
         var endpoint = FindEndpointOrThrow(endpointName);
@@ -1256,7 +1512,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         await ApplyOvrSnapshotsAsync([snapshot]);
         AddLog(snapshot.IsConnected
             ? $"{endpoint.Name} register write: {registerAddress} = {value}"
-            : $"{endpoint.Name} register write failed: {snapshot.StatusText}");
+            : $"{endpoint.Name} register write failed");
     }
 
     public async Task WriteOvrEndpointRegistersAsync(string endpointName, ushort startAddress, IReadOnlyList<ushort> values, CancellationToken cancellationToken = default) // Write Multiple Registers
@@ -1271,7 +1527,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         await ApplyOvrSnapshotsAsync([snapshot]);
         AddLog(snapshot.IsConnected
             ? $"{endpoint.Name} register block write: {startAddress}~{startAddress + values.Count - 1} ({values.Count} words)"
-            : $"{endpoint.Name} register block write failed: {snapshot.StatusText}");
+            : $"{endpoint.Name} register block write failed");
     }
     private async Task<EndpointReadSnapshot> WriteEndpointRegistersAsync(
         OvrEndpointSettingsModel endpoint,
@@ -1285,7 +1541,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             if (!endpoint.IsEnabled)
             {
-                return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, "Endpoint disabled", []);
+                return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
             }
 
             if (!endpoint.Socket.IsConnected)
@@ -1310,7 +1566,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             throw;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             try
             {
@@ -1321,7 +1577,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 // ignore endpoint shutdown errors
             }
 
-            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, $"Write failed: {ex.Message}", []);
+            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
         }
         finally
         {
@@ -1350,7 +1606,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             if (!endpoint.IsEnabled)
             {
                 await endpoint.Socket.DisconnectAsync();
-                return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, "Endpoint disabled", []);
+                return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
             }
 
             if (!endpoint.Socket.IsConnected)
@@ -1358,13 +1614,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 await endpoint.Socket.ConnectAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
             }
 
-            return new EndpointReadSnapshot(endpoint, true, endpoint.CurrentValue, EndpointStatus.Enable, "Connected", endpoint.RegisterSnapshot.ToArray());
+            return new EndpointReadSnapshot(endpoint, true, endpoint.CurrentValue, EndpointStatus.Enable, endpoint.RegisterSnapshot.ToArray());
         }
         catch (OperationCanceledException)
         {
             throw;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             try
             {
@@ -1375,7 +1631,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 // ignore endpoint shutdown errors
             }
 
-            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, ex.Message, []);
+            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
         }
         finally
         {
@@ -1383,35 +1639,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task<EndpointReadSnapshot> ReadEndpointRegistersAsync(OvrEndpointSettingsModel endpoint, CancellationToken cancellationToken)
-    {
-        await endpoint.IoLock.WaitAsync(cancellationToken);
-        try
-        {
-            return await ReadEndpointSnapshotCoreAsync(endpoint, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            try
-            {
-                await endpoint.Socket.DisconnectAsync();
-            }
-            catch
-            {
-                // ignore endpoint shutdown errors
-            }
-
-            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, ex.Message, []);
-        }
-        finally
-        {
-            endpoint.IoLock.Release();
-        }
-    }
+    
 
     
 
@@ -1422,7 +1650,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         if (!endpoint.IsEnabled)
         {
-            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, "", []);
+            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
         }
 
         if (!endpoint.Socket.IsConnected)
@@ -1446,9 +1674,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
 
         EndpointStatus status = EndpointStatus.Enable;
-        string info = $"패킷: {currentRegisterAddress} ~ {currentRegisterAddress + registers.Length}";
 
-        return new EndpointReadSnapshot(endpoint, true, currentValue, status, info, registers);
+        return new EndpointReadSnapshot(endpoint, true, currentValue, status, registers);
     }
 
     
@@ -1459,14 +1686,38 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OvrEndpointSettingsModel Endpoint,
         bool IsConnected,
         double? CurrentValue,
-        EndpointStatus StatusText,
-        string Info,
+        EndpointStatus Status,
         IReadOnlyList<ushort> Registers);
 
     private sealed record EndpointIdleSnapshot(
         OvrEndpointSettingsModel Endpoint,
         EndpointStatus? Status,
         string? Info);
+    #endregion
+
+    #region MainWindow Command State
+    private void RaiseModeAndConfigurationStateChanged()
+    {
+        RaisePropertyChanged(nameof(CanEditBus1Settings));
+        RaisePropertyChanged(nameof(CanEditBus2Settings));
+        RaisePropertyChanged(nameof(CanEditBus3Settings));
+        RaisePropertyChanged(nameof(CanEditBus2Usage));
+        RaisePropertyChanged(nameof(CanEditBus3Usage));
+        RaiseBusCommandCanExecuteChanged();
+    }
+
+    private bool AreAllBusOutputsOpen()
+    {
+        return !State.Bus1.IsApplied &&
+               !State.Bus2.IsApplied &&
+               !State.Bus3.IsApplied &&
+               !KItems.Any(item => IsBusTarget(item.TargetBus) && item.IsOn);
+    }
+
+    private static bool IsBusTarget(string targetBus)
+    {
+        return targetBus is "BUS1" or "BUS2" or "BUS3";
+    }
 
     private void RaiseBusCommandCanExecuteChanged()
     {
@@ -1477,7 +1728,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         Bus2OffCommand.RaiseCanExecuteChanged();
         Bus3OffCommand.RaiseCanExecuteChanged();
     }
+    #endregion
 
+    #region LineSimulator Feedback / IO
     private void StartFeedbackPolling()
     {
         if (_feedbackPollingTask is { IsCompleted: false })
@@ -1619,7 +1872,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         AddLog(logMessage);
     }
 
-    #region line simulator communication
+    #region LineSimulator Modbus Access
     // Write coil
     private async Task WriteAlarmCoilAsync() // 알람 코일은 시스템이 비정상 상태에 빠졌을 때 PLC에서 감지하여 자체적으로 복구 시도를 하거나 관리자에게 경고하기 위한 용도
     {
@@ -1700,9 +1953,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     
     #endregion
 
-
-    
-
     private async Task UpdateSingleFeedbackStateAsync(KContactViewModel kItem, bool isOn)
     {
         if (_isShuttingDown)
@@ -1729,9 +1979,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             SyncBusDiagramFeedback();
         });
     }
+    #endregion
 
-    
-
+    #region MainWindow Diagram Synchronization
     private void SyncBusDiagramFeedback()
     {
         var feedbackStates = KItems.ToDictionary(item => item.Code, item => item.IsOn);
@@ -1742,7 +1992,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         BusDiagram.UpdateMarkerCurrents(currentValues);
     }
+    #endregion
 
+    #region Shared Dispose
     public void Dispose()
     {
         RequestShutdown();
@@ -1775,4 +2027,5 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             // shutdown path
         }
     }
+    #endregion
 }

@@ -57,7 +57,9 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Canvas Width="160" Height="120">
-                            <Border Style="{StaticResource TopLabelBorderStyle}">
+                            <Border Style="{StaticResource TopLabelBorderStyle}"
+                                    Tag="{Binding Title}"
+                                    MouseLeftButtonUp="OutputBorder_MouseLeftButtonUp">
                                 <Grid Margin="7,0">
                                     <TextBlock Text="{Binding Title}"
                                                VerticalAlignment="Center"
@@ -126,9 +128,9 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Rectangle Width="{Binding Width}"
-                                               Height="2"
-                                               Fill="#AAB5C0"
-                                               Opacity="0.82"/>
+                                                       Height="2"
+                                                       Fill="#AAB5C0"
+                                                       Opacity="0.82"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -232,7 +234,10 @@
                                     </ItemsControl.ItemContainerStyle>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Width="100">
+                                            <StackPanel Width="100"
+                                                        Background="Transparent"
+                                                        Tag="{Binding DeviceName}"
+                                                        MouseLeftButtonUp="MarkerStackPanel_MouseLeftButtonUp">
                                                 <Image Source="/Assets/Icon_128x128.png"
                                                        Width="30"
                                                        Height="30"
@@ -376,13 +381,16 @@
                                 <StackPanel Width="52"
                                             Margin="10,23,0,0"
                                             Visibility="{Binding ShowMcMarker, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                            HorizontalAlignment="Center">
+                                            HorizontalAlignment="Center"
+                                            Background="Transparent"
+                                            Tag="{Binding PmMarker.DeviceName}"
+                                            MouseLeftButtonUp="MarkerStackPanel_MouseLeftButtonUp">
                                     <Image Source="/Assets/Icon_128x128.png"
                                            Width="30"
                                            Height="30"
                                            HorizontalAlignment="Center"
                                            RenderOptions.BitmapScalingMode="HighQuality"/>
-                                    <TextBlock Text="PM"
+                                    <TextBlock Text="{Binding PmMarker.Label}"
                                                Margin="0,4,0,0"
                                                HorizontalAlignment="Center"
                                                FontSize="11"
@@ -392,10 +400,8 @@
                                                HorizontalAlignment="Center"
                                                FontSize="12"
                                                FontWeight="SemiBold"
-                                               Foreground="#E2E8F0">
-                                        <Run Text="24.0" Foreground="Lime"/>
-                                        <Run Text="A"/>
-                                    </TextBlock>
+                                               Foreground="{Binding PmMarker.CurrentBrush}"
+                                               Text="{Binding PmMarker.CurrentText}"/>
                                 </StackPanel>
                             </StackPanel>
 

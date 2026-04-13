@@ -8,7 +8,7 @@
         xmlns:s="http://schemas.abtsoftware.co.uk/scichart"
         xmlns:local="clr-namespace:TestMcAlgorithm.Views"
         mc:Ignorable="d"
-        Title="TestMcAlgorithm"
+        Title="Line Simulator"
         Width="1920"
         Height="1020"
         MinWidth="1920"
@@ -39,6 +39,18 @@
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
+        </Style>
+
+        <Style x:Key="ControlButtonStyle" TargetType="dx:SimpleButton">
+            <Setter Property="GlyphWidth" Value="24"/>
+            <Setter Property="GlyphHeight" Value="24"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Margin" Value="0,8,10,0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="#162033"/>
+            <Setter Property="BorderBrush" Value="#26344D"/>
         </Style>
 
         <Style x:Key="KCardStyle" TargetType="Border">
@@ -89,6 +101,7 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style x:Key="OvrDataGridStyle" TargetType="DataGrid">
@@ -167,18 +180,12 @@
 
         <Grid Grid.Row="0" Margin="12,0,12,6">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2.3*"/>
+                <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="1.5*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-
-            <Grid>
-
-            </Grid>
-
-
 
             <Grid Grid.Column="0" Grid.Row="1">
                 <Grid.ColumnDefinitions>
@@ -191,42 +198,45 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="30,10,0,0">
-                    <TextBlock Text="Line Simulator" Foreground="White" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding State.Connection.IpAddress, StringFormat={} IP: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="18,0,0,0"/>
-                    <TextBlock Text="{Binding State.Connection.Port, StringFormat={} Port: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="14,0,0,0"/>
-                    <TextBlock Text="{Binding State.Connection.UnitId, StringFormat={} Unit ID: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="14,0,0,0"/>
-                    <TextBlock Text="{Binding State.Connection.IsConnected, StringFormat={} Connected: {0}}" Foreground="#E2E8F0" VerticalAlignment="Center" Margin="18,0,0,0"/>
+                <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,0">
+                    <Image Width="24" Height="24" Source="/Assets/64xLogo.ico"/>
+                    <TextBlock Text="Line Simulator" Foreground="White" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                    <TextBlock Text="{Binding State.Connection.IpAddress, StringFormat={} IP: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="18,8,0,0"/>
+                    <TextBlock Text="{Binding State.Connection.Port, StringFormat={} Port: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="14,8,0,0"/>
+                    <TextBlock Text="{Binding State.Connection.UnitId, StringFormat={} Unit ID: {0}}" Foreground="#B8C2D6" VerticalAlignment="Center" Margin="14,8,0,0"/>
+                    <TextBlock Text="{Binding State.Connection.IsConnected, StringFormat={} Connected: {0}}" Foreground="White" VerticalAlignment="Center" Margin="18,8,0,0"/>
                 </StackPanel>
                 <!--<Setter Property="Background" Value="#162033"/>
                 <Setter Property="BorderBrush" Value="#26344D"/>-->
                 <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Business Objects/BO_Category.svg'}" GlyphHeight="24" GlyphWidth="24" Padding="0" Width="40" Height="40" CornerRadius="10" Margin="0,0,10,0" Command="{Binding ShowOvrSettingsCommand}" Background="#162033" BorderBrush="#26344D"/>
-                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Icon Builder/Actions_Settings.svg'}" GlyphHeight="24" GlyphWidth="24" Padding="0" Width="40" Height="40" CornerRadius="10" Margin="0,0,10,0" Command="{Binding ShowOvrSettingsCommand}" Background="#162033" BorderBrush="#26344D"/>
-                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/PDF Viewer/SinglePageView.svg'}" GlyphHeight="24" GlyphWidth="24" Padding="0" Width="40" Height="40" CornerRadius="10" Margin="0,0,10,0" Command="{Binding ShowOvrSettingsCommand}" Background="#162033" BorderBrush="#26344D"/>
-                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/RichEdit/DocumentStatistics.svg'}" GlyphHeight="24" GlyphWidth="24" Padding="0" Width="40" Height="40" CornerRadius="10" Margin="0,0,10,0" Command="{Binding ShowOvrSettingsCommand}" Background="#162033" BorderBrush="#26344D"/>
+                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Business Objects/BO_Category.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowOvrSettingsCommand}"/>
+                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Icon Builder/Actions_Settings.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowOvrSettingsCommand}"/>
+                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/PDF Viewer/SinglePageView.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowOvrSettingsCommand}"/>
+                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/RichEdit/DocumentStatistics.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowOvrSettingsCommand}"/>
                 </StackPanel>
 
-                    <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource CardBorderStyle}">
+                <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource CardBorderStyle}">
                     <StackPanel Margin="0,-5,0,-5">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="BUS1" Foreground="White" FontSize="20" FontWeight="Bold"/>
-                            <dx:SimpleButton Content="투입" Width="90" Height="30" Margin="85,0,8,0" Command="{Binding Bus1ApplyCommand}"/>
-                            <dx:SimpleButton Content="정지" Width="90" Height="30" Command="{Binding Bus1OffCommand}"/>
+                            <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="64,0,0,0" Command="{Binding Bus1ApplyCommand}"/>
+                            <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding Bus1OffCommand}" Margin="12,0,0,0"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <ComboBox Style="{StaticResource BusComboStyle}"
+                                          IsEnabled="{Binding CanEditBus1Settings}"
                                           ItemsSource="{Binding Bus1RatedOptions}"
                                           SelectedItem="{Binding State.Bus1.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="227" Margin="10,0,0,0" Height="30"/>
+                                          ItemStringFormat="{}{0:g}" Width="180" Margin="30,0,0,0" Height="30"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
                             <ComboBox Style="{StaticResource BusComboStyle}"
+                                          IsEnabled="{Binding CanEditBus1Settings}"
                                           ItemsSource="{Binding Bus1ScrOptions}"
                                           SelectedItem="{Binding State.Bus1.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="227" Margin="64,0,0,2" Height="30"/>
+                                          ItemStringFormat="{}{0:g}" Width="180" Margin="83,0,0,2" Height="30"/>
                         </StackPanel>
 
                         <TextBlock Text="{Binding State.Bus1.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
@@ -236,25 +246,25 @@
                 <Border Grid.Column="1" Grid.Row="1" Style="{StaticResource CardBorderStyle}">
                     <StackPanel Margin="0,-5,0,-5">
                         <StackPanel Orientation="Horizontal">
-                            <CheckBox Content="BUS2 사용" IsChecked="{Binding State.Bus2.IsEnabled}" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                            <CheckBox Content="BUS2 사용" IsChecked="{Binding State.Bus2.IsEnabled}" IsEnabled="{Binding CanEditBus2Usage}" Foreground="White" FontSize="18" FontWeight="Bold"/>
                             <dx:SimpleButton Content="투입" Width="90" Height="30" Margin="20,0,8,0" Command="{Binding Bus2ApplyCommand}"/>
                             <dx:SimpleButton Content="정지" Width="90" Height="30" Command="{Binding Bus2OffCommand}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
                             <ComboBox Style="{StaticResource BusComboStyle}"
-                                          IsEnabled="{Binding State.Bus2.IsEnabled}"
+                                          IsEnabled="{Binding CanEditBus2Settings}"
                                           ItemsSource="{Binding Bus2RatedOptions}"
                                           SelectedItem="{Binding State.Bus2.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="220" Margin="10,0,0,0" Height="30"/>
+                                          ItemStringFormat="{}{0:g}" Width="150" Margin="10,0,0,0" Height="30"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
                             <ComboBox Style="{StaticResource BusComboStyle}"
-                                          IsEnabled="{Binding State.Bus2.IsEnabled}"
+                                          IsEnabled="{Binding CanEditBus2Settings}"
                                           ItemsSource="{Binding Bus2ScrOptions}"
                                           SelectedItem="{Binding State.Bus2.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="220" Margin="64,0,0,2" Height="30"/>
+                                          ItemStringFormat="{}{0:g}" Width="150" Margin="64,0,0,2" Height="30"/>
                         </StackPanel>
 
                         <TextBlock Text="{Binding State.Bus2.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
@@ -266,7 +276,7 @@
                         <StackPanel Orientation="Horizontal">
                             <CheckBox Content="BUS3 사용"
                                       IsChecked="{Binding State.Bus3.IsEnabled}"
-                                      IsEnabled="{Binding State.Bus2.IsEnabled}"
+                                      IsEnabled="{Binding CanEditBus3Usage}"
                                       Foreground="White"
                                       FontSize="18"
                                       FontWeight="Bold"/>
@@ -276,18 +286,18 @@
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
                             <ComboBox Style="{StaticResource BusComboStyle}"
-                                          IsEnabled="{Binding State.Bus3.IsEnabled}"
+                                          IsEnabled="{Binding CanEditBus3Settings}"
                                           ItemsSource="{Binding Bus3RatedOptions}"
                                           SelectedItem="{Binding State.Bus3.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="227" Margin="10,0,0,0" Height="30"/>
+                                          ItemStringFormat="{}{0:g}" Width="150" Margin="10,0,0,0" Height="30"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
                             <ComboBox Style="{StaticResource BusComboStyle}"
-                                          IsEnabled="{Binding State.Bus3.IsEnabled}"
+                                          IsEnabled="{Binding CanEditBus3Settings}"
                                           ItemsSource="{Binding Bus3ScrOptions}"
                                           SelectedItem="{Binding State.Bus3.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="227" Margin="64,0,0,2" Height="30"/>
+                                          ItemStringFormat="{}{0:g}" Width="150" Margin="64,0,0,2" Height="30"/>
                         </StackPanel>
 
                         <TextBlock Text="{Binding State.Bus3.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
@@ -309,7 +319,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Text="BUS OUT #1" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Bus In" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                             <Grid Grid.Row="1" Margin="0,0,0,0">
                                 <Grid.RowDefinitions>
@@ -326,10 +336,10 @@
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                            <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                            <TextBlock Text="전압" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                            <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
-                                            <TextBlock Text="V" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
+                                        <TextBlock Text="전압" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="V" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
 
@@ -401,7 +411,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Text="BUS OUT #1" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Bus Out #1" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                             <Grid Grid.Row="1" Margin="0,0,0,0">
                                 <Grid.RowDefinitions>
@@ -492,7 +502,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Text="BUS OUT #2" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Bus Out #2" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                             <Grid Grid.Row="1" Margin="0,0,0,0">
                                 <Grid.RowDefinitions>
@@ -502,49 +512,49 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
                                 <Border Grid.Row="0" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="17"/>
-                                                <ColumnDefinition Width="40"/>
-                                                <ColumnDefinition Width="55"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                            <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                            <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
-                                            <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="17"/>
+                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="55"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
+                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
 
-                                    <Border Grid.Row="1" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="17"/>
-                                                <ColumnDefinition Width="40"/>
-                                                <ColumnDefinition Width="55"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                            <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                            <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
-                                            <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
+                                <Border Grid.Row="1" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="17"/>
+                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="55"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
+                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
 
-                                    <Border Grid.Row="2" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="17"/>
-                                                <ColumnDefinition Width="40"/>
-                                                <ColumnDefinition Width="55"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                            <TextBlock Text="운전  부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                            <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
-                                            <TextBlock Text="%" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
+                                <Border Grid.Row="2" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="17"/>
+                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="55"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
+                                        <TextBlock Text="운전  부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="%" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
 
                                 <Border Grid.Row="3" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
                                     <Grid>
@@ -570,7 +580,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Text="BUS OUT #3" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Bus Out #3" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                             <Grid Grid.Row="1" Margin="0,0,0,0">
                                 <Grid.RowDefinitions>
@@ -659,7 +669,24 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="BUS Diagram" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" Margin="0,-5,0,0"/>
+                    <TextBlock Text="Bus Diagram" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                    <Border Grid.Row="0" Style="{StaticResource StatusBorderStyle}" Width="160" Height="40" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,0,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="17"/>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="55"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,1,0,0"/>
+                            <TextBlock Text="Mode" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                            <dxe:ToggleSwitch Grid.Column="2" Grid.ColumnSpan="2" Focusable="False" ToggleSwitchWidth="40" AnimationMode="OnToggle" Foreground="#94A3B8"
+                                              IsChecked="{Binding State.OperationMode.IsManualMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              CheckedStateContent="Manual" UncheckedStateContent="Auto" ContentPlacement="Far"
+                                              VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="5,0,0,0"/>
+                        </Grid>
+
+                    </Border>
                 </Grid>
                 <local:BusDiagramControl Width="1800" Height="540" DataContext="{Binding BusDiagram}"/>
             </Grid>
@@ -718,7 +745,7 @@
                 </Grid>
             </Border>
             <!--System-->
-            <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Margin="5,5,5,5">
+            <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Margin="5,5,22,5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -769,7 +796,7 @@
         <Grid Grid.RowSpan="3"
               Panel.ZIndex="200"
               Background="#99000000"
-              Visibility="{Binding State.OvrSettings.IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            Visibility="{Binding State.OvrSettings.IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
               <!--Visibility="Collapsed">-->
             <Border Width="1000"
                     Height="600"
@@ -794,7 +821,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel>
                             <TextBlock Text="IP Settings" Foreground="White" FontSize="24" FontWeight="Bold"/>
-                            <TextBlock Text="Line Simulator connection and OVR1 ~ OVR10, METER1 Modbus TCP settings" Foreground="#94A3B8" Margin="0,6,0,0"/>
+                            <TextBlock Text="Line Simulator connection and OCR1 ~ OCR10, METER1 Modbus TCP settings" Foreground="#94A3B8" Margin="0,6,0,0"/>
                         </StackPanel>
                     </Grid>
 
@@ -894,6 +921,101 @@
                                          Height="34"
                                          Command="{Binding ApplyOvrSettingsCommand}"/>
                     </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.RowSpan="3"
+              Panel.ZIndex="210"
+              Background="#99000000"
+              Visibility="{Binding State.DeviceDetail.IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border Width="800"
+                    Height="600"
+                    Padding="18"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    CornerRadius="16"
+                    Background="#162033"
+                    BorderBrush="#334155"
+                    BorderThickness="1.5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock Text="{Binding State.DeviceDetail.Title}" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding State.DeviceDetail.Subtitle}" Foreground="#94A3B8" Margin="0,6,0,0"/>
+                        </StackPanel>
+
+                        <dx:SimpleButton Grid.Column="1"
+                                         Content="닫기"
+                                         Width="100"
+                                         Height="34"
+                                         Command="{Binding CloseDeviceDetailCommand}"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,18,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="Current" Foreground="#94A3B8" FontSize="14"/>
+                                <TextBlock Text="{Binding State.DeviceDetail.CurrentText}" Foreground="Lime" FontSize="24" FontWeight="Bold" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Margin="8,0">
+                            <StackPanel>
+                                <TextBlock Text="Status" Foreground="#94A3B8" FontSize="14"/>
+                                <TextBlock Text="{Binding State.DeviceDetail.StatusText}" Foreground="#E2E8F0" FontSize="24" FontWeight="Bold" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Margin="8,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Info" Foreground="#94A3B8" FontSize="14"/>
+                                <TextBlock Text="{Binding State.DeviceDetail.InfoText}" Foreground="#E2E8F0" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <DataGrid Grid.Row="2"
+                              Style="{StaticResource OvrDataGridStyle}"
+                              ColumnHeaderStyle="{StaticResource OvrDataGridHeaderStyle}"
+                              CellStyle="{StaticResource OvrDataGridCellStyle}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              HeadersVisibility="Column"
+                              ItemsSource="{Binding State.DeviceDetail.Registers}"
+                              GridLinesVisibility="Horizontal"
+                              RowHeaderWidth="0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Index" Binding="{Binding Index}" IsReadOnly="True" Width="90" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" />
+                            <DataGridTextColumn Header="Address" Binding="{Binding Address}" IsReadOnly="True" Width="120" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" />
+                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" IsReadOnly="True" Width="*" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="3"
+                               Margin="0,12,0,0"
+                               Text="OCR/PM에서 읽어온 최신 Register Snapshot"
+                               Foreground="#94A3B8"
+                               HorizontalAlignment="Right"/>
                 </Grid>
             </Border>
         </Grid>

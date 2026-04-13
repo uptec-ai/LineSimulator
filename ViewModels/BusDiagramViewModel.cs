@@ -16,7 +16,9 @@ namespace TestMcAlgorithm.ViewModels
         private static readonly Brush OutputPathBrush = CreateBrush("#BFC9D3");
         private static readonly Brush HighlightBrush = CreateBrush("#F59E0B");
 
-        public Func<string, Task>? KBusClickRequestedAsync { get; set; }
+        public Func<string, Task>? KBusClickRequestedAsync { get; set; } // Kbus Click 시그널 처리를 위한 이벤트 핸들러.
+        public Func<string, Task>? OutputClickRequestedAsync { get; set; } // Output Click 시그널 처리를 위한 이벤트 핸들러.
+        public Func<string, Task>? MarkerClickRequestedAsync { get; set; } // Marker Click 시그널 처리를 위한 이벤트 핸들러.
 
         public BusDiagram()
         {
@@ -107,6 +109,7 @@ namespace TestMcAlgorithm.ViewModels
                         ("OCR9", ["K15", "K16", "K17"]),
                         ("OCR10", ["K28", "K29"]),
                     ]),
+                pmMarker: new McMarkerItem("PM", "PM1"),
                 inRails: CreateInRails(1265),
                 outputStartIndex: 0,
                 inputStemX: 714,
@@ -131,6 +134,7 @@ namespace TestMcAlgorithm.ViewModels
                     (300, 2)
                 ]),
                 mcMarkers: [],
+                pmMarker: null,
                 inRails: CreateNInRails(457),
                 outputStartIndex: 3,
                 inputStemX: 275,
@@ -148,6 +152,12 @@ namespace TestMcAlgorithm.ViewModels
 
         public Task HandleKBusClickAsync(string feederLabel) =>
             KBusClickRequestedAsync?.Invoke(feederLabel) ?? Task.CompletedTask;
+
+        public Task HandleOutputClickAsync(string outputTitle) =>
+            OutputClickRequestedAsync?.Invoke(outputTitle) ?? Task.CompletedTask;
+
+        public Task HandleMarkerClickAsync(string deviceKey) =>
+            MarkerClickRequestedAsync?.Invoke(deviceKey) ?? Task.CompletedTask;
 
         public void ClearPath()
         {
@@ -178,9 +188,22 @@ namespace TestMcAlgorithm.ViewModels
         // update marker currents based on the provided dictionary of current values
         public void UpdateMarkerCurrents(IReadOnlyDictionary<string, double?> currentValues)
         {
-            foreach (var marker in Sections.SelectMany(section => section.McMarkers))
+            foreach (var marker in Sections.SelectMany(section => EnumerateMarkers(section)))
             {
                 marker.CurrentValue = currentValues.TryGetValue(marker.DeviceName, out var value) ? value : null;
+            }
+        }
+
+        private static IEnumerable<McMarkerItem> EnumerateMarkers(BusSectionItem section)
+        {
+            foreach (var marker in section.McMarkers)
+            {
+                yield return marker;
+            }
+
+            if (section.PmMarker is not null)
+            {
+                yield return section.PmMarker;
             }
         }
 
@@ -242,7 +265,7 @@ namespace TestMcAlgorithm.ViewModels
                         RailCenterY(activeFeeder.RailIndex),
                         tap.CenterX + 37,
                         RailCenterY(activeFeeder.RailIndex),
-                        3,
+                        2,
                         HighlightBrush));
             }
         }
@@ -308,7 +331,7 @@ namespace TestMcAlgorithm.ViewModels
                 }
 
                 var centerX = targets.Average(feeder => feeder.CenterX);
-                items.Add(new McMarkerItem(label, centerX - 53, 320));
+                items.Add(new McMarkerItem(label, label, centerX - 53, 320));
             }
 
             return items;
@@ -381,6 +404,7 @@ namespace TestMcAlgorithm.ViewModels
             IReadOnlyList<FeederItem> feeders,
             IReadOnlyList<BusTapItem> busTaps,
             IReadOnlyList<McMarkerItem> mcMarkers,
+            McMarkerItem? pmMarker,
             IReadOnlyList<BusRailItem> inRails,
             int outputStartIndex,
             double inputStemX,
@@ -399,6 +423,7 @@ namespace TestMcAlgorithm.ViewModels
             Feeders = feeders;
             BusTaps = busTaps;
             McMarkers = mcMarkers;
+            PmMarker = pmMarker;
             InRails = inRails;
             OutputStartIndex = outputStartIndex;
             InputStemX = inputStemX;
@@ -427,6 +452,8 @@ namespace TestMcAlgorithm.ViewModels
 
         public IReadOnlyList<McMarkerItem> McMarkers { get; }
 
+        public McMarkerItem? PmMarker { get; }
+
         public IReadOnlyList<BusRailItem> InRails { get; }
 
         public int OutputStartIndex { get; }
@@ -453,12 +480,18 @@ namespace TestMcAlgorithm.ViewModels
     {
         private double? _currentValue;
 
-        public McMarkerItem(string label, double left, double top)
+        public McMarkerItem(string label, string deviceName, double left, double top)
         {
             Label = label;
-            DeviceName = label;
+            DeviceName = deviceName;
             Left = left;
             Top = top;
+        }
+
+        public McMarkerItem(string label, string deviceName)
+        {
+            Label = label;
+            DeviceName = deviceName;
         }
 
         public string Label { get; }

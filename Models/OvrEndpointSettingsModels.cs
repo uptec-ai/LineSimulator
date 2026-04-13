@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using TestMcAlgorithm.Services;
 using TestMcAlgorithm.ViewModels;
 
@@ -137,7 +138,22 @@ public sealed class OvrEndpointSettingsModel : ObservableObject, IAsyncDisposabl
         IsConnected = isConnected;
         CurrentValue = currentValue;
         Status = statusText;
-        RegisterSnapshot = registers ?? EmptyRegisters;
+        UpdateRegisterSnapshot(registers ?? EmptyRegisters);
+    }
+
+    private void UpdateRegisterSnapshot(IReadOnlyList<ushort> registers)
+    {
+        if (HasSameRegisterSnapshot(registers))
+        {
+            return;
+        }
+
+        RegisterSnapshot = registers;
+    }
+
+    private bool HasSameRegisterSnapshot(IReadOnlyList<ushort> registers)
+    {
+        return _registerSnapshot.SequenceEqual(registers);
     }
 
     public async ValueTask DisposeAsync()

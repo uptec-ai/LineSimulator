@@ -36,5 +36,27 @@ namespace TestMcAlgorithm.Views
             await viewModel.HandleKBusClickAsync(feederLabel);
             e.Handled = true; // 이벤트 처리 완료 표시
         }
+
+        private async void OutputBorder_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is not BusDiagram viewModel || sender is not FrameworkElement { Tag: string outputTitle })
+            {
+                return;
+            }
+
+            await viewModel.HandleOutputClickAsync(outputTitle);
+            e.Handled = true;
+        }
+
+        private async void MarkerStackPanel_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is not BusDiagram viewModel || sender is not FrameworkElement { Tag: string deviceKey } || string.IsNullOrWhiteSpace(deviceKey))
+            {
+                return;
+            }
+
+            await viewModel.HandleMarkerClickAsync(deviceKey);
+            e.Handled = true;
+        }
     }
 }
