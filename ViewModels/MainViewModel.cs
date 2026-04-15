@@ -8,7 +8,15 @@ namespace TestMcAlgorithm.ViewModels;
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private IpSettingsWindow? _ipSettingsWindow;
+    private LogWindow? _logWindow;
     private DeviceDetailWindow? _deviceDetailWindow;
+    public LineSimulatorViewModel LineSimulator { get; }
+    public MainScreenStateModel State => LineSimulator.State;
+
+    public BusDiagram BusDiagram => LineSimulator.BusDiagram;
+
+    public RelayCommand ShowIpSettingsWindowCommand { get; }
+    public RelayCommand ShowLogWindowCommand { get; }
 
     public MainViewModel(McAlgorithmService algorithmService, IModbusGatewayService modbusGatewayService)
     {
@@ -16,15 +24,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         LineSimulator.DeviceDetailRequested += OnDeviceDetailRequested;
 
         ShowIpSettingsWindowCommand = new RelayCommand(_ => ShowIpSettingsWindow());
+        ShowLogWindowCommand = new RelayCommand(_ => ShowLogWindow());
     }
-
-    public LineSimulatorViewModel LineSimulator { get; }
-
-    public MainScreenStateModel State => LineSimulator.State;
-
-    public BusDiagram BusDiagram => LineSimulator.BusDiagram;
-
-    public RelayCommand ShowIpSettingsWindowCommand { get; }
 
     private void ShowIpSettingsWindow()
     {
@@ -47,6 +48,27 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private void ShowLogWindow()
+    {
+        if (_logWindow is null || !_logWindow.IsLoaded)
+        {
+            var viewModel = new LogWindowViewModel(LineSimulator);
+            _logWindow = new LogWindow
+            {
+                Owner = Application.Current?.MainWindow,
+                DataContext = viewModel
+            };
+
+            viewModel.CloseRequested += () => _logWindow?.Close();
+            _logWindow.Closed += (_, _) => _logWindow = null;
+            _logWindow.Show();
+        }
+        else
+        {
+            _logWindow.Activate();
+        }
+    }
+
     private void OnDeviceDetailRequested(string deviceKey)
     {
         var viewModel = LineSimulator.CreateDeviceDetailViewModel(deviceKey);
@@ -64,7 +86,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _deviceDetailWindow.Show();
             return;
         }
-
         _deviceDetailWindow.DataContext = viewModel;
         viewModel.CloseRequested += () => _deviceDetailWindow?.Close();
         _deviceDetailWindow.Activate();
@@ -73,14 +94,21 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public void RequestShutdown()
     {
         _ipSettingsWindow?.Close();
+        _logWindow?.Close();
         _deviceDetailWindow?.Close();
         LineSimulator.RequestShutdown();
+    }
+
+    public async Task DisconnectLineSimulatorForCloseAsync()
+    {
+        await LineSimulator.DisconnectForCloseAsync();
     }
 
     public void Dispose()
     {
         LineSimulator.DeviceDetailRequested -= OnDeviceDetailRequested;
         _ipSettingsWindow?.Close();
+        _logWindow?.Close();
         _deviceDetailWindow?.Close();
         LineSimulator.Dispose();
     }

@@ -106,10 +106,10 @@
                         <Grid Width="{Binding Width}" Height="500">
                             <Border Width="{Binding Width}"
                                     Height="500"
-                                    Background="#101826"
+                                    Background="#0B1220"
                                     BorderBrush="#738498"
                                     BorderThickness="1.4"
-                                    Opacity="0.6"/>
+                                    Opacity="1"/>
 
                             <Canvas Width="1400" Height="600">
 

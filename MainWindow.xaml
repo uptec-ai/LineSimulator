@@ -7,6 +7,7 @@
         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
         xmlns:s="http://schemas.abtsoftware.co.uk/scichart"
         xmlns:local="clr-namespace:TestMcAlgorithm.Views"
+        xmlns:converter="clr-namespace:TestMcAlgorithm.Converters"
         mc:Ignorable="d"
         Title="Line Simulator"
         Width="1920"
@@ -18,6 +19,7 @@
         Background="#0F172A">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converter:ValueToBrushConverter x:Key="ValueToBrushConverter"/>
         <Style x:Key="CardBorderStyle" TargetType="Border">
             <Setter Property="CornerRadius" Value="14"/>
             <Setter Property="Padding" Value="16"/>
@@ -38,6 +40,7 @@
             <Setter Property="FontFamily" Value="/TestMcAlgorithm;component/Fonts/#Open 24 Display St"/>
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="Foreground" Value="White"/>
+            <Setter Property="ContentStringFormat" Value="{}{0:F1}"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
         </Style>
 
@@ -211,8 +214,8 @@
                 <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
                     <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Business Objects/BO_Category.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowIpSettingsWindowCommand}"/>
                     <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Icon Builder/Actions_Settings.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowIpSettingsWindowCommand}"/>
-                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/PDF Viewer/SinglePageView.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowIpSettingsWindowCommand}"/>
-                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/RichEdit/DocumentStatistics.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowIpSettingsWindowCommand}"/>
+                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/PDF Viewer/SinglePageView.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowLogWindowCommand}"/>
+                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/RichEdit/DocumentStatistics.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowLogWindowCommand}"/>
                 </StackPanel>
 
                 <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource CardBorderStyle}">
@@ -311,6 +314,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Border Grid.Column="0"  Style="{StaticResource CardBorderStyle}" Padding="0">
                         <Grid Margin="5">
@@ -332,13 +336,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전압" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전압" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="380" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="V" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -347,13 +351,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -362,13 +366,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -377,29 +381,16 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="주파수" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="주파수" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="hz" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
-
-                                <Grid Grid.Row="1">
-
-                                </Grid>
-
-                                <Grid Grid.Row="2">
-
-                                </Grid>
-
-                                <Grid Grid.Row="3">
-
-                                </Grid>
-
                             </Grid>
                         </Grid>
                     </Border>
@@ -424,13 +415,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -439,13 +430,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -454,13 +445,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="운전  부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="%" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -469,28 +460,15 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="운전  상태" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="run" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="운전  상태" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="{Binding LineSimulator.BusDiagram.Outputs[0].IsOn}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                     </Grid>
                                 </Border>
-
-                                <Grid Grid.Row="1">
-
-                                </Grid>
-
-                                <Grid Grid.Row="2">
-
-                                </Grid>
-
-                                <Grid Grid.Row="3">
-
-                                </Grid>
-
                             </Grid>
                         </Grid>
                     </Border>
@@ -515,13 +493,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -530,13 +508,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -545,13 +523,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="운전  부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="%" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -560,13 +538,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="운전  상태" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="run" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="운전   상태" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="{Binding LineSimulator.BusDiagram.Outputs[1].IsOn}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                     </Grid>
                                 </Border>
                             </Grid>
@@ -593,13 +571,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
-                                            <ColumnDefinition Width="55"/>
+                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="50"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -608,13 +586,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
-                                            <ColumnDefinition Width="55"/>
+                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="50"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -623,13 +601,13 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="운전  부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="%" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -638,15 +616,92 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="17"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="35"/>
                                             <ColumnDefinition Width="55"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="운전  상태" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                        <Label Content="run" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                        <TextBlock Text="운전  상태" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="{Binding LineSimulator.BusDiagram.Outputs[2].IsOn}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                     </Grid>
                                 </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="4"  Style="{StaticResource CardBorderStyle}" Padding="0">
+                        <Grid Margin="5">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="NBus Out" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                            <Grid Grid.Row="1" Margin="0,0,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Border Grid.Row="0" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="17"/>
+                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
+                                        <TextBlock Text="전류 #1" Grid.Column="1" TextWrapping="Wrap" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="{Binding LineSimulator.NBusOut1}" ContentStringFormat="{}{0:F1}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Row="1" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="17"/>
+                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
+                                        <TextBlock Text="전류 #2" Grid.Column="1" TextWrapping="Wrap" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="{Binding LineSimulator.NBusOut2}" ContentStringFormat="{}{0:F1}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Row="2" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="17"/>
+                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="55"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
+                                        <TextBlock Text="전류 #3" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="{Binding LineSimulator.NBusOut3}" ContentStringFormat="{}{0:F1}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <!--<Border Grid.Row="3" Style="{StaticResource StatusBorderStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="17"/>
+                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="55"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
+                                        <TextBlock Text="운전  상태" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <Label Content="run" Grid.Column="2" Style="{StaticResource StatusLabelStyle}"/>
+                                    </Grid>
+                                </Border>-->
                             </Grid>
                         </Grid>
                     </Border>
@@ -678,12 +733,25 @@
                                 <ColumnDefinition Width="55"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,1,0,0"/>
+                            <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="{Binding LineSimulator.State.OperationMode.IsManualMode, Converter={StaticResource ValueToBrushConverter}}" Margin="10,1,0,0"/>
                             <TextBlock Text="Mode" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                            <dxe:ToggleSwitch Grid.Column="2" Grid.ColumnSpan="2" Focusable="False" ToggleSwitchWidth="40" AnimationMode="OnToggle" Foreground="#94A3B8"
+                            <dxe:ToggleSwitch Grid.Column="2" Grid.ColumnSpan="2" Focusable="False" ToggleSwitchWidth="40" AnimationMode="OnToggle"
                                               IsChecked="{Binding LineSimulator.State.OperationMode.IsManualMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                               CheckedStateContent="Manual" UncheckedStateContent="Auto" ContentPlacement="Far"
-                                              VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="5,0,0,0"/>
+                                              VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="5,0,0,0">
+                                <dxe:ToggleSwitch.Style>
+                                    <Style TargetType="dxe:ToggleSwitch">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter Property="Foreground" Value="#FF36C0F6"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="False">
+                                                <Setter Property="Foreground" Value="#FFF68E36"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </dxe:ToggleSwitch.Style>
+                            </dxe:ToggleSwitch>
                         </Grid>
 
                     </Border>
@@ -707,10 +775,16 @@
                     </Grid.RowDefinitions>
                     <Label Content="Log" Grid.Row="0" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0"/>
 
-                    <dx:SimpleButton Content="Clear"
-                                     Width="90"
-                                     Height="30"
-                                     Command="{Binding LineSimulator.ClearLogsCommand}" Margin="0" HorizontalAlignment="Right"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <dx:SimpleButton Content="View"
+                                         Width="90"
+                                         Height="30"
+                                         Command="{Binding ShowLogWindowCommand}" Margin="0,0,8,0"/>
+                        <dx:SimpleButton Content="Clear"
+                                         Width="90"
+                                         Height="30"
+                                         Command="{Binding LineSimulator.ClearLogsCommand}" Margin="0"/>
+                    </StackPanel>
 
                     <ListBox Grid.Row="1"
                              Margin="0,5,0,0"
@@ -738,7 +812,14 @@
                         </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" Foreground="White"/>
+                                <TextBlock Foreground="White" TextWrapping="Wrap">
+                                    <Run Text="["/>
+                                    <Run Text="{Binding MainWindowTimestampText, Mode=OneWay}"/>
+                                    <Run Text="] ["/>
+                                    <Run Text="{Binding LevelText, Mode=OneWay}"/>
+                                    <Run Text="] "/>
+                                    <Run Text="{Binding Message, Mode=OneWay}"/>
+                                </TextBlock>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

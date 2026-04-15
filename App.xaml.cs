@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
+using TestMcAlgorithm.Converters;
 
 namespace TestMcAlgorithm;
 
@@ -12,6 +13,7 @@ namespace TestMcAlgorithm;
 /// </summary>
 public partial class App : Application, INotifyPropertyChanged
 {
+    public ConvertFunction ConvertFunction { get; } = new ConvertFunction();
     private DispatcherTimer dt_timer; // 현재시간 타이머 
     public event PropertyChangedEventHandler? PropertyChanged;
     private string _currentTime = string.Empty;

@@ -68,7 +68,15 @@ public sealed class ModbusTcpGatewayService : IModbusGatewayService
 
         return await _master.ReadInputsAsync(unitId, startAddress, numberOfPoints).WaitAsync(cancellationToken);
     }
+    public async Task<ushort[]> ReadInputRegistersAsync(byte unitId, ushort startAddress, ushort numberOfPoints, CancellationToken cancellationToken)
+    {
+        if (!IsConnected || _master is null)
+        {
+            throw new InvalidOperationException("Modbus gateway is not connected.");
+        }
 
+        return await _master.ReadInputRegistersAsync(unitId, startAddress, numberOfPoints).WaitAsync(cancellationToken);
+    }
     public async Task<ushort[]> ReadHoldingRegistersAsync(byte unitId, ushort startAddress, ushort numberOfPoints, CancellationToken cancellationToken)
     {
         if (!IsConnected || _master is null)

@@ -45,21 +45,21 @@ public static class KCatalog
         new(16, "K16", 9, "BUS2", "D", 577.5150, 15, 15),
         new(17, "K17", 9, "BUS3", "D", 577.5150, 16, 16),
         // MC10
-        new(28, "K28", 10, "BUS2", "A", 1443.7171, 27, 27),
-        new(29, "K29", 10, "BUS3", "A", 1443.7171, 28, 28),
+        new(28, "K28", 10, "BUS2", "A", 1443.7171, 17, 17),
+        new(29, "K29", 10, "BUS3", "A", 1443.7171, 18, 18),
 
         // NMC 1
-        new(18, "K18", 18, "NBUS1", "N1", null, 17, 17),
+        new(18, "K18", 11, "NBUS1", "N1", null, 19, 19),
         // NMC 2
-        new(19, "K19", 19, "NBUS1", "N2", null, 18, 18),
-        new(20, "K20", 20, "NBUS2", "N2", null, 19, 19),
+        new(19, "K19", 12, "NBUS1", "N2", null, 20, 20),
+        new(20, "K20", 12, "NBUS2", "N2", null, 21, 21),
         // NMC 3
-        new(21, "K21", 21, "NBUS1", "N3", null, 20, 20),
-        new(22, "K22", 22, "NBUS2", "N3", null, 21, 21),
-        new(23, "K23", 23, "NBUS3", "N3", null, 22, 22),
+        new(21, "K21", 13, "NBUS1", "N3", null, 22, 22),
+        new(22, "K22", 13, "NBUS2", "N3", null, 23, 23),
+        new(23, "K23", 13, "NBUS3", "N3", null, 24, 24),
         // NMC 4
-        new(24, "K24", 24, "NBUS2", "N4", null, 23, 23),
-        new(25, "K25", 25, "NBUS3", "N4", null, 24, 24),
+        new(24, "K24", 14, "NBUS2", "N4", null, 25, 25),
+        new(25, "K25", 14, "NBUS3", "N4", null, 26, 26),
     ];
 
     public static IReadOnlyDictionary<(int SourceMcNumber, string TargetBus), KDefinition> ByMcBus { get; } =

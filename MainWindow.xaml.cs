@@ -7,6 +7,8 @@ namespace TestMcAlgorithm;
 
 public partial class MainWindow : Window
 {
+    private bool _isClosingAfterDisconnect;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -15,23 +17,55 @@ public partial class MainWindow : Window
             new ModbusTcpGatewayService());
     }
 
-    protected override void OnClosing(CancelEventArgs e)
+    protected override async void OnClosing(CancelEventArgs e)
     {
+        if (_isClosingAfterDisconnect)
+        {
+            if (DataContext is MainViewModel shutdownViewModel)
+            {
+                shutdownViewModel.RequestShutdown();
+            }
+
+            base.OnClosing(e);
+            return;
+        }
+
         if (DataContext is MainViewModel viewModel &&
             viewModel.State.Connection.IsConnected)
         {
             e.Cancel = true;
-            MessageBox.Show(
-                "장비와 연결된 상태에서는 종료할 수 없습니다.\n먼저 Disconnect 후 다시 종료해 주세요.",
+            var result = MessageBox.Show(
+                "LineSimulator와 연결된 상태에서는 종료할 수 없습니다.\n연결을 끊고 종료하시겠습니까?",
                 "Connected",
-                MessageBoxButton.OK,
+                MessageBoxButton.OKCancel,
                 MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.OK)
+            {
+                return;
+            }
+
+            try
+            {
+                await viewModel.DisconnectLineSimulatorForCloseAsync();
+                _isClosingAfterDisconnect = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Line Simulator 연결 해제 중 오류가 발생했습니다.\n{ex.Message}",
+                    "Disconnect Failed",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+
             return;
         }
 
-        if (DataContext is MainViewModel shutdownViewModel)
+        if (DataContext is MainViewModel finalShutdownViewModel)
         {
-            shutdownViewModel.RequestShutdown();
+            finalShutdownViewModel.RequestShutdown();
         }
 
         base.OnClosing(e);

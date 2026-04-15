@@ -1,7 +1,9 @@
+using DevExpress.Mvvm;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.NetworkInformation;
 using System.Windows;
+using System.Windows.Data;
 using TestMcAlgorithm.Models;
 using TestMcAlgorithm.Services;
 using static TestMcAlgorithm.Models.OvrEndpointSettingsModel;
@@ -10,10 +12,11 @@ namespace TestMcAlgorithm.ViewModels;
 
 public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 {
-    public double SampleValue { get; set; } = 123.0;
+    // address mapping
 
     private const ushort LineRegisterStartAddress = 0;
-    private const ushort LineRegisterCount = 10;
+    private const ushort LineRegisterCount = 6;
+
     private const ushort EndpointRegisterStartAddress = 476;
     private const ushort EndpointRegisterCount = 26;
 
@@ -23,7 +26,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
     private readonly McAlgorithmService _algorithmService;
     private readonly IModbusGatewayService _modbusGatewayService;
-    private readonly SemaphoreSlim _modbusIoLock = new(1, 1);
+    private readonly SemaphoreSlim _modbusIoLock = new(1, 1); // 최대 작업 : 1개
     private bool _isRefreshingSelections;
     private bool _isBusOperationRunning;
     private CancellationTokenSource? _feedbackPollingCts;
@@ -40,6 +43,25 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     private IReadOnlyList<BusRequestSpec> _availableBus3Requests = [];
     private AlgorithmPlan? _currentPlan;
 
+    private double _nbusOut1;
+    public double NBusOut1
+    {
+        get => _nbusOut1;
+        set => SetProperty(ref _nbusOut1, value);
+    }
+    private double _nbusOut2;
+    public double NBusOut2
+    {
+        get => _nbusOut2;
+        set => SetProperty(ref _nbusOut2, value);
+    }
+    private double _nbusOut3;
+    public double NBusOut3
+    {
+        get => _nbusOut3;
+        set => SetProperty(ref _nbusOut3, value);
+    }
+
     #region MainWindow Composition
     public LineSimulatorViewModel(McAlgorithmService algorithmService, IModbusGatewayService modbusGatewayService)
     {
@@ -50,10 +72,10 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         BusDiagram.OutputClickRequestedAsync = HandleDiagramOutputClickAsync;
         BusDiagram.MarkerClickRequestedAsync = HandleDiagramMarkerClickAsync;
         State = new MainScreenStateModel();
-
+        LogStore = new LogStore();
         McItems = new ObservableCollection<McButtonViewModel>(McCatalog.All.Select(definition => new McButtonViewModel(definition)));
         KItems = new ObservableCollection<KContactViewModel>(KCatalog.All.OrderBy(definition => definition.Number).Select(definition => new KContactViewModel(definition)));
-        Logs = new ObservableCollection<string>();
+        Logs = LogStore.RecentEntries;
 
         Bus1RatedOptions = new ObservableCollection<double>(_algorithmService.SupportedRatedKva);
         Bus1ScrOptions = new ObservableCollection<double>(_algorithmService.SupportedScr);
@@ -64,7 +86,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         ConnectCommand = new AsyncRelayCommand(_ => ConnectAsync(), _ => !State.Connection.IsConnected);
         DisconnectCommand = new AsyncRelayCommand(_ => DisconnectAsync(), _ => State.Connection.IsConnected);
-        ClearLogsCommand = new RelayCommand(_ => Logs.Clear());
+        ClearLogsCommand = new RelayCommand(_ => LogStore.Clear());
         ApplyOvrSettingsCommand = new AsyncRelayCommand(_ => ApplyOvrSettingsAsync());
 
         Bus1ApplyCommand = new AsyncRelayCommand(_ => TurnBusOnAsync("BUS1"), _ => CanApplyBus("BUS1"));
@@ -113,9 +135,10 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
     #region MainWindow State / Commands
     public MainScreenStateModel State { get; }
+    public LogStore LogStore { get; }
     public ObservableCollection<McButtonViewModel> McItems { get; }
     public ObservableCollection<KContactViewModel> KItems { get; }
-    public ObservableCollection<string> Logs { get; }
+    public ObservableCollection<LogEntryModel> Logs { get; }
     public ObservableCollection<double> Bus1RatedOptions { get; }
     public ObservableCollection<double> Bus1ScrOptions { get; }
     public ObservableCollection<double> Bus2RatedOptions { get; }
@@ -201,7 +224,9 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         }
 
         RaiseModeAndConfigurationStateChanged();
-        AddLog($"Operation mode changed: {(State.OperationMode.IsManualMode ? "Manual" : "Auto")}");
+        AddLog(
+            State.OperationMode.IsManualMode ? LogDefinitions.SystemManualModeChanged : LogDefinitions.SystemAutoModeChanged,
+            $"Operation mode changed: {(State.OperationMode.IsManualMode ? "Manual" : "Auto")}");
     }
 
     private void OnBus1PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -326,29 +351,29 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             await _modbusGatewayService.ConnectAsync(State.Connection.IpAddress, State.Connection.Port, CancellationToken.None); // line simulator 
             State.Connection.IsConnected = true;
             _feedbackReadFailed = false;
-            AddLog($"Connected to {State.Connection.IpAddress}:{State.Connection.Port}");
-
-            try
-            {
-                var lineRegisters = await ReadLineSimulatorRegistersAsync(CancellationToken.None);
-                AddLog($"Line simulator register read ready: {LineRegisterStartAddress}~{LineRegisterStartAddress + LineRegisterCount - 1} ({lineRegisters.Length} words)");
-            }
-            catch (Exception ex)
-            {
-                AddLog($"Line simulator register read failed: {ex.Message}");
-            }
+            AddLog(LogDefinitions.LineSimulatorConnected, $"Connected to {State.Connection.IpAddress}:{State.Connection.Port}");
 
             StartFeedbackPolling();
         }
         catch (Exception ex)
         {
-            AddLog($"Connect failed: {ex.Message}");
+            AddLog(LogDefinitions.LineSimulatorConnectFailed, $"Connect failed: {ex.Message}");
         }
     }
 
     private async Task DisconnectAsync()
     {
         await DisconnectCoreAsync("Disconnected", stopPolling: true);
+    }
+
+    public async Task DisconnectForCloseAsync()
+    {
+        if (!State.Connection.IsConnected)
+        {
+            return;
+        }
+
+        await DisconnectAsync();
     }
     #endregion
 
@@ -361,7 +386,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             ApplyPlanToView(_currentPlan);
             if (writeLog)
             {
-                AddLog("Algorithm plan calculated.");
+                AddLog(LogDefinitions.PlanCalculated, "Algorithm plan calculated.");
             }
         }
         catch (Exception ex)
@@ -372,7 +397,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             State.AlgorithmSummary = ex.Message;
             if (writeLog)
             {
-                AddLog($"Calculate failed: {ex.Message}");
+                AddLog(LogDefinitions.PlanCalculationFailed, $"Calculate failed: {ex.Message}");
             }
         }
     }
@@ -395,7 +420,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             if (!State.Connection.IsConnected)
             {
-                AddLog($"{busName} apply blocked: Line Simulator disconnected.");
+                AddLog(LogDefinitions.BusApplyBlocked, $"{busName} apply blocked: Line Simulator disconnected.");
                 return;
             }
 
@@ -405,7 +430,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             }
             catch (Exception ex)
             {
-                AddLog($"Apply aborted: {ex.Message}");
+                AddLog(LogDefinitions.BusApplyAborted, $"Apply aborted: {ex.Message}");
                 return;
             }
 
@@ -418,7 +443,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             var target = GetBusResult(_currentPlan, busName);
             if (target is null || !target.IsAssigned)
             {
-                AddLog($"{busName} apply skipped: valid selection 없음");
+                AddLog(LogDefinitions.BusApplySkipped, $"{busName} apply skipped: valid selection 없음");
                 return;
             }
 
@@ -434,7 +459,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 if (!cleared)
                 {
                     SetBusConfigurationLocked(busName, false);
-                    AddLog($"{busName} apply aborted: {kItem.Code} clear feedback not confirmed.");
+                    AddLog(LogDefinitions.BusApplyAborted, $"{busName} apply aborted: {kItem.Code} clear feedback not confirmed.");
                     return;
                 }
             }
@@ -446,13 +471,13 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 if (!applied)
                 {
                     SetBusConfigurationLocked(busName, false);
-                    AddLog($"{busName} apply aborted: {kItem.Code} feedback not confirmed.");
+                    AddLog(LogDefinitions.BusApplyAborted, $"{busName} apply aborted: {kItem.Code} feedback not confirmed.");
                     return;
                 }
             }
 
             SetBusApplied(busName, true);
-            AddLog($"{busName} apply sequence completed.");
+            AddLog(LogDefinitions.GetBusApplied(busName), $"{busName} apply sequence completed.");
         }
         finally
         {
@@ -505,7 +530,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 var turnedOff = await TurnKOffWithFeedbackCheckAsync(kItem, $"{busName} off");
                 if (!turnedOff)
                 {
-                    AddLog($"{busName} off aborted: {kItem.Code} feedback not confirmed.");
+                    AddLog(LogDefinitions.BusStopAborted, $"{busName} off aborted: {kItem.Code} feedback not confirmed.");
                     return;
                 }
             }
@@ -518,7 +543,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             _currentPlan = null;
             SetBusConfigurationLocked(busName, false);
             SetBusApplied(busName, false);
-            AddLog($"{busName} off sequence completed.");
+            AddLog(LogDefinitions.GetBusStopped(busName), $"{busName} off sequence completed.");
         }
         finally
         {
@@ -530,7 +555,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     {
         if (!TryBeginBusOperation())
         {
-            AddLog($"Manual control skipped: another operation is running.");
+            AddLog(LogDefinitions.ManualControlSkipped, "Manual control skipped: another operation is running.");
             return;
         }
 
@@ -538,20 +563,20 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             if (!State.Connection.IsConnected)
             {
-                AddLog($"{kCode} manual control blocked: Line Simulator disconnected.");
+                AddLog(LogDefinitions.ManualControlBlocked, $"{kCode} manual control blocked: Line Simulator disconnected.");
                 return;
             }
 
             if (!State.OperationMode.IsManualMode)
             {
-                AddLog($"{kCode} manual control blocked: switch to Manual mode first.");
+                AddLog(LogDefinitions.ManualControlBlocked, $"{kCode} manual control blocked: switch to Manual mode first.");
                 return;
             }
 
             var kItem = KItems.FirstOrDefault(item => string.Equals(item.Code, kCode, StringComparison.OrdinalIgnoreCase));
             if (kItem is null)
             {
-                AddLog($"{kCode} manual control unavailable: K mapping not found.");
+                AddLog(LogDefinitions.ManualControlBlocked, $"{kCode} manual control unavailable: K mapping not found.");
                 return;
             }
 
@@ -566,7 +591,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
             if (confirmationResult != MessageBoxResult.OK)
             {
-                AddLog($"{kCode} manual control cancelled by user.");
+                AddLog(LogDefinitions.UserOperationCancelled, $"{kCode} manual control cancelled by user.");
                 return;
             }
 
@@ -575,7 +600,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 var turnedOff = await TurnKOffWithFeedbackCheckAsync(kItem, $"{operationBus} manual off");
                 if (turnedOff)
                 {
-                    AddLog($"{kCode} manual off completed.");
+                    AddLog(LogDefinitions.ManualOffCompleted, $"{kCode} manual off completed.");
                 }
 
                 return;
@@ -584,14 +609,14 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             var interlockedPeer = FindInterlockedPeer(kItem);
             if (interlockedPeer is not null)
             {
-                AddLog($"{kCode} manual on blocked: {interlockedPeer.Code} is already ON for MC{interlockedPeer.Definition.SourceMcNumber}.");
+                AddLog(LogDefinitions.InterlockBlocked, $"{kCode} manual on blocked: {interlockedPeer.Code} is already ON for MC{interlockedPeer.Definition.SourceMcNumber}.");
                 return;
             }
 
             var applied = await ApplyKWithFeedbackCheckAsync(kItem, $"{operationBus} manual");
             if (applied)
             {
-                AddLog($"{kCode} manual on completed.");
+                AddLog(LogDefinitions.ManualOnCompleted, $"{kCode} manual on completed.");
             }
         }
         finally
@@ -606,11 +631,11 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             var endpoint = FindEndpointOrThrow(deviceKey);
             DeviceDetailRequested?.Invoke(endpoint.DeviceKey);
-            AddLog($"{endpoint.DeviceKey} detail requested.");
+            AddLog(LogDefinitions.DeviceDetailRequested, $"{endpoint.DeviceKey} detail requested.");
         }
         catch (Exception ex)
         {
-            AddLog($"Device detail open failed: {ex.Message}");
+            AddLog(LogDefinitions.DeviceDetailOpenFailed, $"Device detail open failed: {ex.Message}");
         }
 
         return Task.CompletedTask;
@@ -620,7 +645,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     {
         if (!TryBeginBusOperation())
         {
-            AddLog($"Manual output control skipped: another operation is running.");
+            AddLog(LogDefinitions.ManualControlSkipped, "output control skipped: another operation is running.");
             return;
         }
 
@@ -628,20 +653,20 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             if (!State.Connection.IsConnected)
             {
-                AddLog($"{outputTitle} manual off blocked: Line Simulator disconnected.");
+                AddLog(LogDefinitions.ManualOutputControlBlocked, $"{outputTitle} off blocked: Line Simulator disconnected.");
                 return;
             }
 
-            if (!State.OperationMode.IsManualMode)
-            {
-                AddLog($"{outputTitle} manual off blocked: switch to Manual mode first.");
-                return;
-            }
+            //if (!State.OperationMode.IsManualMode)
+            //{
+            //    AddLog(LogDefinitions.ManualOutputControlBlocked, $"{outputTitle} manual off blocked: switch to Manual mode first.");
+            //    return;
+            //}
 
             var targetBus = ResolveOutputTargetBus(outputTitle);
             if (targetBus is null)
             {
-                AddLog($"{outputTitle} manual off skipped: output mapping not found.");
+                AddLog(LogDefinitions.ManualOutputControlBlocked, $"{outputTitle} off skipped: output mapping not found.");
                 return;
             }
 
@@ -652,21 +677,21 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
             if (targetItems.Length == 0)
             {
-                AddLog($"{outputTitle} manual off skipped: no active K found.");
+                AddLog(LogDefinitions.ManualOutputControlBlocked, $"{outputTitle} off skipped: no active K found.");
                 return;
             }
 
             foreach (var kItem in targetItems)
             {
-                var turnedOff = await TurnKOffWithFeedbackCheckAsync(kItem, $"{targetBus} manual output off");
+                var turnedOff = await TurnKOffWithFeedbackCheckAsync(kItem, $"{targetBus} output off");
                 if (!turnedOff)
                 {
-                    AddLog($"{outputTitle} manual off aborted: {kItem.Code} feedback not confirmed.");
+                    AddLog(LogDefinitions.BusStopAborted, $"{outputTitle} off aborted: {kItem.Code} feedback not confirmed.");
                     return;
                 }
             }
 
-            AddLog($"{outputTitle} manual off completed.");
+            AddLog(LogDefinitions.ManualOutputOffCompleted, $"{outputTitle} manual off completed.");
         }
         finally
         {
@@ -924,11 +949,11 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                   kItem.Definition.CoilAddress,
                   state,
                   CancellationToken.None);
-            AddLog($"{reason}: {kItem.Code} -> {(state ? "ON" : "OFF")} (coil {kItem.Definition.CoilAddress})");
+            AddLog(LogDefinitions.CoilWrite, $"{reason}: {kItem.Code} -> {(state ? "ON" : "OFF")} (coil {kItem.Definition.CoilAddress})");
         }
         catch (Exception ex)
         {
-            AddLog($"{kItem.Code} write failed: {ex.Message}");
+            AddLog(LogDefinitions.CoilWriteFailed, $"{kItem.Code} write failed: {ex.Message}");
         }
 
         if (delayAfter)
@@ -941,7 +966,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     {
         if (!State.Connection.IsConnected)
         {
-            AddLog($"{busName} apply blocked: Line Simulator disconnected.");
+            AddLog(LogDefinitions.BusApplyBlocked, $"{busName} apply blocked: Line Simulator disconnected.");
             return false;
         }
 
@@ -960,21 +985,22 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             }
             catch (Exception ex)
             {
-                AddLog($"{kItem.Code} feedback verification failed: {ex.Message}");
+                AddLog(LogDefinitions.OnFeedbackVerificationFailed, $"{kItem.Code} feedback verification failed: {ex.Message}");
                 await DisconnectCoreAsync("Disconnected automatically after feedback verification failure.", stopPolling: true);
                 return false;
             }
 
             if (feedbackMatched)
             {
-                AddLog($"{kItem.Code} feedback confirmed.");
+                AddLog(LogDefinitions.OnFeedbackConfirmed, $"{kItem.Code} feedback confirmed.");
                 return true;
             }
 
-            AddLog($"{kItem.Code} feedback mismatch ({attempt}/{MaxApplyFeedbackRetryCount}).");
+            AddLog(LogDefinitions.OnFeedbackMismatch, $"{kItem.Code} feedback mismatch ({attempt}/{MaxApplyFeedbackRetryCount}).");
         }
 
-        AddLog($"{kItem.Code} feedback retry exhausted. Alarm coil {AlarmCoilAddress} -> ON");
+        AddLog(LogDefinitions.OnFeedbackRetryExhausted, $"{kItem.Code} feedback retry exhausted. Alarm coil {AlarmCoilAddress} -> ON");
+        AddLog(LogDefinitions.AlarmRetryExhausted, $"{kItem.Code} feedback retry exhausted. Alarm coil {AlarmCoilAddress} -> ON");
         //await WriteAlarmCoilAsync();
         return false;
     }
@@ -983,7 +1009,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     {
         if (!State.Connection.IsConnected)
         {
-            AddLog($"{reason}: Line Simulator disconnected.");
+            AddLog(LogDefinitions.LineSimulatorDisconnected, $"{reason}: Line Simulator disconnected.");
             return false;
         }
 
@@ -996,11 +1022,11 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 var feedbackMatched = !await ReadKFeedbackStateAsync(kItem, CancellationToken.None);
                 if (feedbackMatched)
                 {
-                    AddLog($"{kItem.Code} feedback confirmed OFF.");
+                    AddLog(LogDefinitions.OffFeedbackConfirmed, $"{kItem.Code} feedback confirmed OFF.");
                     return true;
                 }
 
-                AddLog($"{kItem.Code} off feedback mismatch ({attempt}/{MaxApplyFeedbackRetryCount}).");
+                AddLog(LogDefinitions.OffFeedbackMismatch, $"{kItem.Code} off feedback mismatch ({attempt}/{MaxApplyFeedbackRetryCount}).");
             }
             catch (OperationCanceledException)
             {
@@ -1008,13 +1034,14 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             }
             catch (Exception ex)
             {
-                AddLog($"{kItem.Code} off feedback verification failed: {ex.Message}");
+                AddLog(LogDefinitions.OffFeedbackVerificationFailed, $"{kItem.Code} off feedback verification failed: {ex.Message}");
                 await DisconnectCoreAsync("Disconnected automatically after off feedback verification failure.", stopPolling: true);
                 return false;
             }
         }
 
-        AddLog($"{kItem.Code} off feedback retry exhausted. Alarm coil {AlarmCoilAddress} -> ON");
+        AddLog(LogDefinitions.OffFeedbackRetryExhausted, $"{kItem.Code} off feedback retry exhausted. Alarm coil {AlarmCoilAddress} -> ON");
+        AddLog(LogDefinitions.AlarmRetryExhausted, $"{kItem.Code} off feedback retry exhausted. Alarm coil {AlarmCoilAddress} -> ON");
         //await WriteAlarmCoilAsync();
         return false;
     }
@@ -1037,14 +1064,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         return McCatalog.ByNumber.TryGetValue(sourceMcNumber, out var definition) && definition.IsShared;
     }
 
-    private void AddLog(string message)
-    {
-        Logs.Insert(0, $"[{DateTime.Now:HH:mm:ss}] {message}");
-        while (Logs.Count > 200)
-        {
-            Logs.RemoveAt(Logs.Count - 1);
-        }
-    }
+    private void AddLog(LogDefinition definition, string message) => LogStore.Append(definition, message);
 
     private bool CanApplyBus(string busName)
     {
@@ -1363,13 +1383,13 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         if (!State.OvrSettings.Endpoints.Any(endpoint => endpoint.IsEnabled))
         {
             await RefreshIdleStatusesAsync(CancellationToken.None);
-            AddLog("OVR polling stopped.");
+            AddLog(LogDefinitions.EndpointPollingStopped, "OVR polling stopped.");
             return;
         }
 
         _ovrPollingCts = new CancellationTokenSource();
         _ovrPollingTask = PollOvrLoopAsync(_ovrPollingCts.Token);
-        AddLog("OVR polling started.");
+        AddLog(LogDefinitions.EndpointPollingStarted, "OVR polling started.");
     }
 
     private async Task StopOvrPollingAsync(bool disconnectSockets = true)
@@ -1432,11 +1452,11 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         if (enabledNames.Length == 0)
         {
             SyncOvrCurrentsToDiagram(new Dictionary<string, double?>());
-            AddLog("OVR/PM endpoint apply: nothing selected.");
+            AddLog(LogDefinitions.EndpointSettingsEmpty, "OVR/PM endpoint apply: nothing selected.");
             return;
         }
 
-        AddLog($"OVR/PM endpoint apply: {string.Join(", ", enabledNames)}");
+        AddLog(LogDefinitions.EndpointSettingsApplied, $"OVR/PM endpoint apply: {string.Join(", ", enabledNames)}");
         await RestartOvrPollingAsync();
     }
 
@@ -1494,9 +1514,11 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         var endpoint = FindEndpointOrThrow(endpointName);
         var snapshot = await WriteEndpointRegistersAsync(endpoint, registerAddress, [value], writeSingleRegister: true, cancellationToken);
         await ApplyOvrSnapshotsAsync([snapshot]);
-        AddLog(snapshot.IsConnected
-            ? $"{endpoint.Name} register write: {registerAddress} = {value}"
-            : $"{endpoint.Name} register write failed");
+        AddLog(
+            snapshot.IsConnected ? LogDefinitions.EndpointRegisterWrite : LogDefinitions.EndpointRegisterWriteFailed,
+            snapshot.IsConnected
+                ? $"{endpoint.Name} register write: {registerAddress} = {value}"
+                : $"{endpoint.Name} register write failed");
     }
 
     public async Task WriteOvrEndpointRegistersAsync(string endpointName, ushort startAddress, IReadOnlyList<ushort> values, CancellationToken cancellationToken = default) // Write Multiple Registers
@@ -1509,9 +1531,11 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         var snapshot = await WriteEndpointRegistersAsync(endpoint, startAddress, values, writeSingleRegister: false, cancellationToken);
         await ApplyOvrSnapshotsAsync([snapshot]);
-        AddLog(snapshot.IsConnected
-            ? $"{endpoint.Name} register block write: {startAddress}~{startAddress + values.Count - 1} ({values.Count} words)"
-            : $"{endpoint.Name} register block write failed");
+        AddLog(
+            snapshot.IsConnected ? LogDefinitions.EndpointRegisterBlockWrite : LogDefinitions.EndpointRegisterBlockWriteFailed,
+            snapshot.IsConnected
+                ? $"{endpoint.Name} register block write: {startAddress}~{startAddress + values.Count - 1} ({values.Count} words)"
+                : $"{endpoint.Name} register block write failed");
     }
     private async Task<EndpointReadSnapshot> WriteEndpointRegistersAsync(
         OvrEndpointSettingsModel endpoint,
@@ -1623,10 +1647,6 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         }
     }
 
-    
-
-    
-
     private async Task<EndpointReadSnapshot> ReadEndpointSnapshotCoreAsync(
         OvrEndpointSettingsModel endpoint,
         CancellationToken cancellationToken,
@@ -1661,10 +1681,6 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         return new EndpointReadSnapshot(endpoint, true, currentValue, status, registers);
     }
-
-    
-
-    
 
     private sealed record EndpointReadSnapshot(
         OvrEndpointSettingsModel Endpoint,
@@ -1768,17 +1784,23 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var values = await ReadDiscreteInputsAsync(
+            var values = await _modbusGatewayService.ReadDiscreteInputsAsync(
                 (byte)State.Connection.UnitId,
                 FeedbackStartAddress,
                 FeedbackCount,
                 cancellationToken);
 
-            await UpdateFeedbackStatesAsync(values);
+            var reg = await _modbusGatewayService.ReadInputRegistersAsync(
+                (byte)State.Connection.UnitId,
+                LineRegisterStartAddress,
+                LineRegisterCount,
+                cancellationToken);
+
+            await UpdateFeedbackStatesAsync(values, reg);
 
             if (_feedbackReadFailed)
             {
-                AddLog("Discrete input feedback recovered.");
+                AddLog(LogDefinitions.FeedbackRecovered, "Discrete input feedback recovered.");
                 _feedbackReadFailed = false;
             }
         }
@@ -1790,15 +1812,14 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             if (!_feedbackReadFailed)
             {
-                AddLog($"Feedback read failed: {ex.Message}");
+                AddLog(LogDefinitions.FeedbackReadFailed, $"Feedback read failed: {ex.Message}");
             }
 
             _feedbackReadFailed = true;
             await DisconnectCoreAsync("Disconnected automatically after feedback read failure.", stopPolling: false);
         }
     }
-
-    private async Task UpdateFeedbackStatesAsync(IReadOnlyList<bool> values)
+    private async Task UpdateFeedbackStatesAsync(IReadOnlyList<bool> values, IReadOnlyList<ushort> reg)
     {
         if (_isShuttingDown)
         {
@@ -1809,12 +1830,15 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         if (dispatcher is null)
         {
             ApplyFeedbackStates(values);
+            ApplyRegisterStates(reg);
+
             return;
         }
 
         if (dispatcher.CheckAccess())
         {
             ApplyFeedbackStates(values);
+            ApplyRegisterStates(reg);
             return;
         }
 
@@ -1824,8 +1848,19 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         }
 
         await dispatcher.InvokeAsync(() => ApplyFeedbackStates(values));
+        await dispatcher.InvokeAsync(() => ApplyRegisterStates(reg));
     }
+    private void ApplyRegisterStates(IReadOnlyList<ushort> values)
+    {
+        if (values == null || values.Count == 0) return;
 
+        App app = Application.Current as App;
+        var bytes = app.ConvertFunction.RegistersToBytes(values, true);
+        
+        NBusOut1 = BitConverter.ToSingle(bytes, 0);
+        NBusOut2 = BitConverter.ToSingle(bytes, 4);
+        NBusOut3 = BitConverter.ToSingle(bytes, 8);
+    }
     private void ApplyFeedbackStates(IReadOnlyList<bool> values)
     {
         foreach (var kItem in KItems)
@@ -1851,9 +1886,9 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         await _modbusGatewayService.DisconnectAsync();
         State.Connection.IsConnected = false;
         ResetBusAppliedFlags();
-        await UpdateFeedbackStatesAsync([]);
+        await UpdateFeedbackStatesAsync([],[]);
         _feedbackReadFailed = false;
-        AddLog(logMessage);
+        AddLog(LogDefinitions.LineSimulatorDisconnected, logMessage);
     }
 
     #region LineSimulator Modbus Access
@@ -1862,7 +1897,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     {
         if (!State.Connection.IsConnected)
         {
-            AddLog($"Alarm coil {AlarmCoilAddress} write skipped: disconnected");
+            AddLog(LogDefinitions.AlarmCoilWriteSkipped, $"Alarm coil {AlarmCoilAddress} write skipped: disconnected");
             return;
         }
 
@@ -1872,7 +1907,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            AddLog($"Alarm coil write failed: {ex.Message}");
+            AddLog(LogDefinitions.AlarmCoilWriteFailed, $"Alarm coil write failed: {ex.Message}");
             await DisconnectCoreAsync("Disconnected automatically after alarm coil write failure.", stopPolling: true);
         }
     }
@@ -1914,14 +1949,6 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         }
     }
     // Read registers
-    private Task<ushort[]> ReadLineSimulatorRegistersAsync(CancellationToken cancellationToken)
-    {
-        return ReadHoldingRegistersAsync(
-            (byte)State.Connection.UnitId,
-            LineRegisterStartAddress,
-            LineRegisterCount,
-            cancellationToken);
-    }
     private async Task<ushort[]> ReadHoldingRegistersAsync(byte unitId, ushort startAddress, ushort numberOfPoints, CancellationToken cancellationToken)
     {
         await _modbusIoLock.WaitAsync(cancellationToken);

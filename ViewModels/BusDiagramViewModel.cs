@@ -157,7 +157,7 @@ namespace TestMcAlgorithm.ViewModels
             OutputClickRequestedAsync?.Invoke(outputTitle) ?? Task.CompletedTask;
 
         public Task HandleMarkerClickAsync(string deviceKey) =>
-            MarkerClickRequestedAsync?.Invoke(deviceKey) ?? Task.CompletedTask;
+            MarkerClickRequestedAsync?.Invoke(deviceKey) ?? Task.CompletedTask; // Marker Click 이벤트 핸들러가 등록되어 있으면 호출, 그렇지 않으면 완료된 Task 반환
 
         public void ClearPath()
         {

@@ -8,5 +8,6 @@ public interface IModbusGatewayService : IAsyncDisposable
     Task DisconnectAsync();
     Task WriteSingleCoilAsync(byte unitId, ushort coilAddress, bool value, CancellationToken cancellationToken);
     Task<bool[]> ReadDiscreteInputsAsync(byte unitId, ushort startAddress, ushort numberOfPoints, CancellationToken cancellationToken);
+    Task<ushort[]> ReadInputRegistersAsync(byte unitId, ushort startAddress, ushort numberOfPoints, CancellationToken cancellationToken);
     Task<ushort[]> ReadHoldingRegistersAsync(byte unitId, ushort startAddress, ushort numberOfPoints, CancellationToken cancellationToken);
 }
