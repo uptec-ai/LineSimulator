@@ -213,98 +213,112 @@
                 <Setter Property="BorderBrush" Value="#26344D"/>-->
                 <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
                     <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Business Objects/BO_Category.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowIpSettingsWindowCommand}"/>
-                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Icon Builder/Actions_Settings.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowIpSettingsWindowCommand}"/>
+                    <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/Icon Builder/Actions_Settings.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowOcrSettingsWindowCommand}"/>
                     <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/PDF Viewer/SinglePageView.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowLogWindowCommand}"/>
                     <dx:SimpleButton Glyph="{dx:DXImage 'SvgImages/RichEdit/DocumentStatistics.svg'}" Style="{StaticResource ControlButtonStyle}" Command="{Binding ShowLogWindowCommand}"/>
                 </StackPanel>
 
                 <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource CardBorderStyle}">
-                    <StackPanel Margin="0,-5,0,-5">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="BUS1" Foreground="White" FontSize="20" FontWeight="Bold"/>
-                            <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="64,0,0,0" Command="{Binding LineSimulator.Bus1ApplyCommand}"/>
-                            <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus1OffCommand}" Margin="12,0,0,0"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width=".5*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="BUS1" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Height="30"/>
+                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5,0,0" Height="30"/>
+                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18" Height="30" Margin="9,5,0,0" HorizontalAlignment="Left"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                        <StackPanel Grid.Column="1" Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+
+                                <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="22,0,0,0" Command="{Binding LineSimulator.Bus1ApplyCommand}"/>
+                                <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus1OffCommand}" Margin="12,0,0,0"/>
+                            </StackPanel>
                             <ComboBox Style="{StaticResource BusComboStyle}"
                                           IsEnabled="{Binding LineSimulator.CanEditBus1Settings}"
                                           ItemsSource="{Binding LineSimulator.Bus1RatedOptions}"
                                           SelectedItem="{Binding State.Bus1.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="180" Margin="30,0,0,0" Height="30"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
+                                          ItemStringFormat="{}{0:g}" Width="180" Margin="20,5,0,0" Height="30"/>
                             <ComboBox Style="{StaticResource BusComboStyle}"
                                           IsEnabled="{Binding LineSimulator.CanEditBus1Settings}"
                                           ItemsSource="{Binding LineSimulator.Bus1ScrOptions}"
                                           SelectedItem="{Binding State.Bus1.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="180" Margin="83,0,0,2" Height="30"/>
+                                          ItemStringFormat="{}{0:g}" Width="180" Margin="20,5,0,2" Height="30"/>
                         </StackPanel>
 
-                        <TextBlock Text="{Binding State.Bus1.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
-                    </StackPanel>
+                        <TextBlock Grid.ColumnSpan="2" Text="{Binding State.Bus1.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Bottom"/>
+                    </Grid>
+
                 </Border>
 
                 <Border Grid.Column="1" Grid.Row="1" Style="{StaticResource CardBorderStyle}">
-                    <StackPanel Margin="0,-5,0,-5">
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox Content="BUS2 사용" IsChecked="{Binding State.Bus2.IsEnabled}" IsEnabled="{Binding LineSimulator.CanEditBus2Usage}" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                            <dx:SimpleButton Content="투입" Width="90" Height="30" Margin="20,0,8,0" Command="{Binding LineSimulator.Bus2ApplyCommand}"/>
-                            <dx:SimpleButton Content="정지" Width="90" Height="30" Command="{Binding LineSimulator.Bus2OffCommand}"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
-                            <ComboBox Style="{StaticResource BusComboStyle}"
-                                          IsEnabled="{Binding LineSimulator.CanEditBus2Settings}"
-                                          ItemsSource="{Binding LineSimulator.Bus2RatedOptions}"
-                                          SelectedItem="{Binding State.Bus2.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="150" Margin="10,0,0,0" Height="30"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
-                            <ComboBox Style="{StaticResource BusComboStyle}"
-                                          IsEnabled="{Binding LineSimulator.CanEditBus2Settings}"
-                                          ItemsSource="{Binding LineSimulator.Bus2ScrOptions}"
-                                          SelectedItem="{Binding State.Bus2.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="150" Margin="64,0,0,2" Height="30"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width=".5*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="BUS2" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Height="30"/>
+                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5,0,0" Height="30"/>
+                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18" Height="30" Margin="9,5,0,0" HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <TextBlock Text="{Binding State.Bus2.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
-                    </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+
+                                <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="22,0,0,0" Command="{Binding LineSimulator.Bus1ApplyCommand}"/>
+                                <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus1OffCommand}" Margin="12,0,0,0"/>
+                            </StackPanel>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                      IsEnabled="{Binding LineSimulator.CanEditBus2Settings}"
+                                      ItemsSource="{Binding LineSimulator.Bus2RatedOptions}"
+                                      SelectedItem="{Binding State.Bus2.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      ItemStringFormat="{}{0:g}" Width="180" Margin="20,5,0,0" Height="30"/>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                      IsEnabled="{Binding LineSimulator.CanEditBus2Settings}"
+                                      ItemsSource="{Binding LineSimulator.Bus2ScrOptions}"
+                                      SelectedItem="{Binding State.Bus2.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      ItemStringFormat="{}{0:g}" Width="180" Margin="20,5,0,2" Height="30"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.ColumnSpan="2" Text="{Binding State.Bus2.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Bottom"/>
+                    </Grid>
                 </Border>
 
                 <Border Grid.Column="2" Grid.Row="1" Style="{StaticResource CardBorderStyle}">
-                    <StackPanel Margin="0,-5,0,-5">
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox Content="BUS3 사용"
-                                      IsChecked="{Binding State.Bus3.IsEnabled}"
-                                      IsEnabled="{Binding LineSimulator.CanEditBus3Usage}"
-                                      Foreground="White"
-                                      FontSize="18"
-                                      FontWeight="Bold"/>
-                            <dx:SimpleButton Content="투입" Width="90" Height="30" Margin="29,0,8,0" Command="{Binding LineSimulator.Bus3ApplyCommand}"/>
-                            <dx:SimpleButton Content="정지" Width="90" Height="30" Command="{Binding LineSimulator.Bus3OffCommand}"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
-                            <ComboBox Style="{StaticResource BusComboStyle}"
-                                          IsEnabled="{Binding LineSimulator.CanEditBus3Settings}"
-                                          ItemsSource="{Binding LineSimulator.Bus3RatedOptions}"
-                                          SelectedItem="{Binding State.Bus3.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="150" Margin="10,0,0,0" Height="30"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18"/>
-                            <ComboBox Style="{StaticResource BusComboStyle}"
-                                          IsEnabled="{Binding LineSimulator.CanEditBus3Settings}"
-                                          ItemsSource="{Binding LineSimulator.Bus3ScrOptions}"
-                                          SelectedItem="{Binding State.Bus3.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          ItemStringFormat="{}{0:g}" Width="150" Margin="64,0,0,2" Height="30"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width=".5*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="BUS3" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Height="30"/>
+                            <TextBlock Text="용량 (kVA)" Foreground="#94A3B8" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5,0,0" Height="30"/>
+                            <TextBlock Text="SCR" Foreground="#94A3B8" VerticalAlignment="Center" FontSize="18" Height="30" Margin="9,5,0,0" HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <TextBlock Text="{Binding State.Bus3.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap"/>
-                    </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+
+                                <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="22,0,0,0" Command="{Binding LineSimulator.Bus1ApplyCommand}"/>
+                                <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus1OffCommand}" Margin="12,0,0,0"/>
+                            </StackPanel>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                      IsEnabled="{Binding LineSimulator.CanEditBus3Settings}"
+                                      ItemsSource="{Binding LineSimulator.Bus3RatedOptions}"
+                                      SelectedItem="{Binding State.Bus3.RatedKva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      ItemStringFormat="{}{0:g}" Width="180" Margin="20,5,0,0" Height="30"/>
+                            <ComboBox Style="{StaticResource BusComboStyle}"
+                                      IsEnabled="{Binding LineSimulator.CanEditBus3Settings}"
+                                      ItemsSource="{Binding LineSimulator.Bus3ScrOptions}"
+                                      SelectedItem="{Binding State.Bus3.Scr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      ItemStringFormat="{}{0:g}" Width="180" Margin="20,5,0,2" Height="30"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.ColumnSpan="2" Text="{Binding State.Bus2.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Bottom"/>
+                    </Grid>
                 </Border>
             </Grid>
             <Grid Grid.Column="1" Grid.RowSpan="2">
@@ -342,7 +356,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전압" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="380" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="V" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -654,7 +668,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전류 #1" Grid.Column="1" TextWrapping="Wrap" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="{Binding LineSimulator.NBusOut1}" ContentStringFormat="{}{0:F1}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.NBusOut1}" ContentStringFormat="{}{0:F2}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -669,7 +683,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전류 #2" Grid.Column="1" TextWrapping="Wrap" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="{Binding LineSimulator.NBusOut2}" ContentStringFormat="{}{0:F1}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.NBusOut2}" ContentStringFormat="{}{0:F2}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -684,7 +698,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전류 #3" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="{Binding LineSimulator.NBusOut3}" ContentStringFormat="{}{0:F1}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.NBusOut3}" ContentStringFormat="{}{0:F2}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>

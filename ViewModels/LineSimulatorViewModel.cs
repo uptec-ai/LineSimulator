@@ -1,4 +1,6 @@
 using DevExpress.Mvvm;
+using DevExpress.Utils.Filtering;
+using DevExpress.Xpf.Bars.Native;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.NetworkInformation;
@@ -43,20 +45,20 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     private IReadOnlyList<BusRequestSpec> _availableBus3Requests = [];
     private AlgorithmPlan? _currentPlan;
 
-    private double _nbusOut1;
-    public double NBusOut1
+    private float _nbusOut1;
+    public float    NBusOut1
     {
         get => _nbusOut1;
         set => SetProperty(ref _nbusOut1, value);
     }
-    private double _nbusOut2;
-    public double NBusOut2
+    private float _nbusOut2;
+    public float NBusOut2
     {
         get => _nbusOut2;
         set => SetProperty(ref _nbusOut2, value);
     }
-    private double _nbusOut3;
-    public double NBusOut3
+    private float _nbusOut3;
+    public float NBusOut3
     {
         get => _nbusOut3;
         set => SetProperty(ref _nbusOut3, value);
@@ -173,7 +175,6 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
     private static ushort FeedbackStartAddress => KCatalog.All.Min(item => item.FeedbackAddress);
     private static ushort FeedbackCount => (ushort)(KCatalog.All.Max(item => item.FeedbackAddress) - FeedbackStartAddress + 1);
-
     private void SubscribeStateEvents()
     {
         State.Connection.PropertyChanged += OnConnectionPropertyChanged;
@@ -1855,7 +1856,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         if (values == null || values.Count == 0) return;
 
         App app = Application.Current as App;
-        var bytes = app.ConvertFunction.RegistersToBytes(values, true);
+        var bytes = app.ConvertFunction.RegistersToBytes(values, false);
         
         NBusOut1 = BitConverter.ToSingle(bytes, 0);
         NBusOut2 = BitConverter.ToSingle(bytes, 4);

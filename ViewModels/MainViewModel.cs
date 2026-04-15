@@ -16,6 +16,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public BusDiagram BusDiagram => LineSimulator.BusDiagram;
 
     public RelayCommand ShowIpSettingsWindowCommand { get; }
+    public RelayCommand ShowOcrSettingsWindowCommand { get; }
     public RelayCommand ShowLogWindowCommand { get; }
 
     public MainViewModel(McAlgorithmService algorithmService, IModbusGatewayService modbusGatewayService)
@@ -24,6 +25,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         LineSimulator.DeviceDetailRequested += OnDeviceDetailRequested;
 
         ShowIpSettingsWindowCommand = new RelayCommand(_ => ShowIpSettingsWindow());
+        //ShowOcrSettingsWindowCommand = new RelayCommand(_ => ShowOcrSettingsWindow());
         ShowLogWindowCommand = new RelayCommand(_ => ShowLogWindow());
     }
 
@@ -47,6 +49,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _ipSettingsWindow.Activate();
         }
     }
+    //private void ShowOcrSettingsWindow()
+    //{
+    //    var viewModel = new OcrSettingsWindowViewModel(LineSimulator);
+    //    var ocrSettingsWindow = new OcrSettingsWindow
+    //    {
+    //        Owner = Application.Current?.MainWindow,
+    //        DataContext = viewModel
+    //    };
+    //    viewModel.CloseRequested += () => ocrSettingsWindow.Close();
+    //    ocrSettingsWindow.ShowDialog();
+    //}
 
     private void ShowLogWindow()
     {

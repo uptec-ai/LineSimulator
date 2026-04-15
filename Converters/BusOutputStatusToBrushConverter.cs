@@ -58,20 +58,20 @@ public sealed class ConvertFunction
         if (registers == null)
             throw new ArgumentNullException(nameof(registers));
 
+        if (wordSwap && registers.Count % 2 != 0)
+            throw new ArgumentException("wordSwap requires an even number of registers.");
+
         byte[] bytes = new byte[registers.Count * 2];
 
         for (int i = 0; i < registers.Count; i++)
         {
             int srcIndex = wordSwap ? (i ^ 1) : i;
-            // i^1 → 0↔1, 2↔3, 4↔5 (2개씩 swap)
-
             ushort value = registers[srcIndex];
 
-            // Little Endian
-            bytes[i * 2] = (byte)(value & 0xFF);       // LSB
-            bytes[i * 2 + 1] = (byte)(value >> 8);     // MSB
+            bytes[i * 2] = (byte)(value & 0xFF);
+            bytes[i * 2 + 1] = (byte)(value >> 8);
         }
 
         return bytes;
-        }
+    }
 }
