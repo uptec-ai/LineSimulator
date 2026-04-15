@@ -1,0 +1,303 @@
+<Window x:Class="TestMcAlgorithm.Views.OcrSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        Title="OCR Settings"
+        Width="1280"
+        Height="820"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        Background="#0F172A">
+    <Window.Resources>
+        <Style x:Key="CardBorderStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Background" Value="#162033"/>
+            <Setter Property="BorderBrush" Value="#26344D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="SectionSubtitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="ListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel>
+                <TextBlock Text="OCR Settings" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                <TextBlock Text="활성화된 OCR/PM 목록과 OCR 파라미터를 조회하고 수정합니다." Foreground="#94A3B8" Margin="0,6,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                <dx:SimpleButton Content="목록 새로고침" Width="120" Height="34" Margin="0,0,8,0" Command="{Binding RefreshEnabledEndpointsCommand}"/>
+                <dx:SimpleButton Content="닫기" Width="100" Height="34" Command="{Binding CloseCommand}"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Enabled OCR" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="IP Settings에서 Enable 된 OCR" Style="{StaticResource SectionSubtitleStyle}" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1"
+                             Margin="0,16,0,0"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource ListBoxItemStyle}"
+                             ItemsSource="{Binding EnabledOcrEndpoints}"
+                             SelectedItem="{Binding SelectedOcrEndpoint, Mode=TwoWay}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12" Background="#0B1220" BorderBrush="#334155" BorderThickness="1" CornerRadius="10">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding DeviceKey}" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Name}" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding IpAddress, StringFormat={}IP: {0}}" Foreground="#CBD5E1" Margin="0,8,0,0"/>
+                                        <TextBlock Text="{Binding Status, StringFormat={}Status: {0}}" Foreground="#CBD5E1" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Enabled PM" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="현재 활성화된 전력계" Style="{StaticResource SectionSubtitleStyle}" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" Text="{Binding EnabledPmSummary}" Foreground="#CBD5E1" Margin="0,16,0,0" TextWrapping="Wrap"/>
+
+                    <ItemsControl Grid.Row="2" Margin="0,16,0,0" ItemsSource="{Binding EnabledPmEndpoints}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12" Margin="0,0,0,8" Background="#0B1220" BorderBrush="#334155" BorderThickness="1" CornerRadius="10">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding DeviceKey}" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Name}" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding IpAddress, StringFormat={}IP: {0}}" Foreground="#CBD5E1" Margin="0,8,0,0"/>
+                                        <TextBlock Text="{Binding Status, StringFormat={}Status: {0}}" Foreground="#CBD5E1" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock Text="Selected OCR Settings" Style="{StaticResource SectionTitleStyle}"/>
+                            <TextBlock Text="{Binding SelectedOcrName}" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                            <TextBlock Text="{Binding SelectedOcrDeviceKey}" Foreground="#CBD5E1" Margin="0,2,0,0"/>
+                            <TextBlock Text="{Binding SelectedOcrEndpointAddress}" Foreground="#CBD5E1" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <dx:SimpleButton Grid.Column="1"
+                                         Content="현재값 읽기"
+                                         Width="100"
+                                         Height="34"
+                                         VerticalAlignment="Top"
+                                         Command="{Binding ReloadSelectedOcrSettingsCommand}"
+                                         IsEnabled="{Binding CanEditSelectedOcr}"/>
+                    </Grid>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,20,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <TextBlock Text="IP Address" Style="{StaticResource SectionTitleStyle}"/>
+                                <TextBlock Text="Reg 3000 ~ 3003" Style="{StaticResource SectionSubtitleStyle}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <dxe:TextEdit Grid.Column="1"
+                                          Height="34"
+                                          Margin="16,0,12,0"
+                                          VerticalAlignment="Center"
+                                          EditValue="{Binding IpAddressText, UpdateSourceTrigger=PropertyChanged}"
+                                          NullText="예: 192.168.0.10"
+                                          IsEnabled="{Binding CanEditSelectedOcr}"/>
+
+                            <dx:SimpleButton Grid.Column="2"
+                                             Content="변경"
+                                             Width="88"
+                                             Height="34"
+                                             VerticalAlignment="Center"
+                                             Command="{Binding ApplyIpAddressCommand}"
+                                             IsEnabled="{Binding CanEditSelectedOcr}"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <TextBlock Text="Network Write Access" Style="{StaticResource SectionTitleStyle}"/>
+                                <TextBlock Text="Reg 484 / 0=False, 1=True" Style="{StaticResource SectionSubtitleStyle}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <dxe:ToggleSwitchEdit Grid.Column="1"
+                                                  Margin="16,0,0,0"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalAlignment="Left"
+                                                  IsChecked="{Binding NetworkWriteAccess, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  CheckedStateContent="True"
+                                                  UncheckedStateContent="False"
+                                                  IsEnabled="{Binding CanEditSelectedOcr}"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.RowSpan="2">
+                                <TextBlock Text="Protection Settings" Style="{StaticResource SectionTitleStyle}"/>
+                                <TextBlock Text="OCFD / OCFT 값을 개별 변경" Style="{StaticResource SectionSubtitleStyle}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="1" Text="OCFD (Reg 556)" Style="{StaticResource LabelStyle}" Margin="16,0,12,8"/>
+                            <dxe:TextEdit Grid.Column="1"
+                                          Grid.Row="1"
+                                          Height="34"
+                                          Margin="16,0,12,0"
+                                          EditValue="{Binding OcfdText, UpdateSourceTrigger=PropertyChanged}"
+                                          IsEnabled="{Binding CanEditSelectedOcr}"/>
+                            <dx:SimpleButton Grid.Column="2"
+                                             Grid.Row="1"
+                                             Content="변경"
+                                             Width="88"
+                                             Height="34"
+                                             Command="{Binding ApplyOcfdCommand}"
+                                             IsEnabled="{Binding CanEditSelectedOcr}"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="4" Style="{StaticResource CardBorderStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <TextBlock Text="OCFT" Style="{StaticResource SectionTitleStyle}"/>
+                                <TextBlock Text="Reg 557" Style="{StaticResource SectionSubtitleStyle}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <dxe:TextEdit Grid.Column="1"
+                                          Height="34"
+                                          Margin="16,0,12,0"
+                                          VerticalAlignment="Center"
+                                          EditValue="{Binding OcftText, UpdateSourceTrigger=PropertyChanged}"
+                                          IsEnabled="{Binding CanEditSelectedOcr}"/>
+
+                            <dx:SimpleButton Grid.Column="2"
+                                             Content="변경"
+                                             Width="88"
+                                             Height="34"
+                                             VerticalAlignment="Center"
+                                             Command="{Binding ApplyOcftCommand}"
+                                             IsEnabled="{Binding CanEditSelectedOcr}"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Margin="8,16,8,0" Padding="14" Background="#111827" BorderBrush="#334155" BorderThickness="1" CornerRadius="10">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap"/>
+        </Border>
+    </Grid>
+</Window>

@@ -1510,6 +1510,52 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     #endregion
 
     #region EndPoint Register Access
+    public async Task<ushort[]> ReadOvrEndpointHoldingRegistersAsync(
+        string endpointName,
+        ushort startAddress,
+        ushort numberOfPoints,
+        CancellationToken cancellationToken = default)
+    {
+        var endpoint = FindEndpointOrThrow(endpointName);
+        await endpoint.IoLock.WaitAsync(cancellationToken);
+        try
+        {
+            if (!endpoint.IsEnabled)
+            {
+                throw new InvalidOperationException($"OVR/PM endpoint '{endpoint.Name}' is not enabled.");
+            }
+
+            if (!endpoint.Socket.IsConnected)
+            {
+                await endpoint.Socket.ConnectAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
+            }
+
+            var slaveId = ResolveSlaveId(endpoint);
+            return await endpoint.Socket.ReadHoldingRegistersAsync(slaveId, startAddress, numberOfPoints, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            try
+            {
+                await endpoint.Socket.DisconnectAsync();
+            }
+            catch
+            {
+                // ignore endpoint shutdown errors
+            }
+
+            throw;
+        }
+        finally
+        {
+            endpoint.IoLock.Release();
+        }
+    }
+
     public async Task WriteOvrEndpointRegisterAsync(string endpointName, ushort registerAddress, ushort value, CancellationToken cancellationToken = default) // Write Single Register
     {
         var endpoint = FindEndpointOrThrow(endpointName);

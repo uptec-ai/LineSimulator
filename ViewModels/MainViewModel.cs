@@ -8,6 +8,7 @@ namespace TestMcAlgorithm.ViewModels;
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private IpSettingsWindow? _ipSettingsWindow;
+    private OcrSettingsWindow? _ocrSettingsWindow;
     private LogWindow? _logWindow;
     private DeviceDetailWindow? _deviceDetailWindow;
     public LineSimulatorViewModel LineSimulator { get; }
@@ -25,7 +26,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         LineSimulator.DeviceDetailRequested += OnDeviceDetailRequested;
 
         ShowIpSettingsWindowCommand = new RelayCommand(_ => ShowIpSettingsWindow());
-        //ShowOcrSettingsWindowCommand = new RelayCommand(_ => ShowOcrSettingsWindow());
+        ShowOcrSettingsWindowCommand = new RelayCommand(_ => ShowOcrSettingsWindow());
         ShowLogWindowCommand = new RelayCommand(_ => ShowLogWindow());
     }
 
@@ -49,17 +50,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _ipSettingsWindow.Activate();
         }
     }
-    //private void ShowOcrSettingsWindow()
-    //{
-    //    var viewModel = new OcrSettingsWindowViewModel(LineSimulator);
-    //    var ocrSettingsWindow = new OcrSettingsWindow
-    //    {
-    //        Owner = Application.Current?.MainWindow,
-    //        DataContext = viewModel
-    //    };
-    //    viewModel.CloseRequested += () => ocrSettingsWindow.Close();
-    //    ocrSettingsWindow.ShowDialog();
-    //}
+    private void ShowOcrSettingsWindow()
+    {
+        if (_ocrSettingsWindow is null || !_ocrSettingsWindow.IsLoaded)
+        {
+            var viewModel = new OcrSettingsWindowViewModel(LineSimulator);
+            _ocrSettingsWindow = new OcrSettingsWindow
+            {
+                Owner = Application.Current?.MainWindow,
+                DataContext = viewModel
+            };
+
+            viewModel.CloseRequested += () => _ocrSettingsWindow?.Close();
+            _ocrSettingsWindow.Closed += (_, _) => _ocrSettingsWindow = null;
+            _ocrSettingsWindow.Show();
+        }
+        else
+        {
+            _ocrSettingsWindow.Activate();
+        }
+    }
 
     private void ShowLogWindow()
     {
@@ -107,6 +117,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public void RequestShutdown()
     {
         _ipSettingsWindow?.Close();
+        _ocrSettingsWindow?.Close();
         _logWindow?.Close();
         _deviceDetailWindow?.Close();
         LineSimulator.RequestShutdown();
@@ -121,6 +132,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         LineSimulator.DeviceDetailRequested -= OnDeviceDetailRequested;
         _ipSettingsWindow?.Close();
+        _ocrSettingsWindow?.Close();
         _logWindow?.Close();
         _deviceDetailWindow?.Close();
         LineSimulator.Dispose();
