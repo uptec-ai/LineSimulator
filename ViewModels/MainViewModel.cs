@@ -43,7 +43,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             viewModel.CloseRequested += () => _ipSettingsWindow?.Close();
             _ipSettingsWindow.Closed += (_, _) => _ipSettingsWindow = null;
-            _ipSettingsWindow.Show();
+            _ipSettingsWindow.ShowDialog();
         }
         else
         {
@@ -54,16 +54,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         if (_ocrSettingsWindow is null || !_ocrSettingsWindow.IsLoaded)
         {
-            var viewModel = new OcrSettingsWindowViewModel(LineSimulator);
             _ocrSettingsWindow = new OcrSettingsWindow
             {
-                Owner = Application.Current?.MainWindow,
-                DataContext = viewModel
+                Owner = Application.Current?.MainWindow
             };
+            var viewModel = new OcrSettingsWindowViewModel(LineSimulator, _ocrSettingsWindow);
+            _ocrSettingsWindow.DataContext = viewModel;
 
             viewModel.CloseRequested += () => _ocrSettingsWindow?.Close();
             _ocrSettingsWindow.Closed += (_, _) => _ocrSettingsWindow = null;
-            _ocrSettingsWindow.Show();
+            _ocrSettingsWindow.ShowDialog();
         }
         else
         {

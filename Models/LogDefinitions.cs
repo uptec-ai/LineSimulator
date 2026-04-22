@@ -52,6 +52,8 @@ public static class LogDefinitions
     public static readonly LogDefinition EndpointRegisterWriteFailed = new("COM-END-004", LogCategory.Communication, LogLevel.Error, "EndPoint 단일 레지스터 쓰기 실패", "EndPoint 단일 레지스터 쓰기 실패", "EndPoint 단일 레지스터 쓰기에 실패했습니다.");
     public static readonly LogDefinition EndpointRegisterBlockWrite = new("COM-END-005", LogCategory.Communication, LogLevel.Info, "EndPoint 다중 레지스터 쓰기", "EndPoint 다중 레지스터 쓰기 성공", "EndPoint 다중 레지스터 쓰기를 수행했습니다.");
     public static readonly LogDefinition EndpointRegisterBlockWriteFailed = new("COM-END-006", LogCategory.Communication, LogLevel.Error, "EndPoint 다중 레지스터 쓰기 실패", "EndPoint 다중 레지스터 쓰기 실패", "EndPoint 다중 레지스터 쓰기에 실패했습니다.");
+    public static readonly LogDefinition EndpointPollingReadFailed = new("COM-END-007", LogCategory.Communication, LogLevel.Error, "EndPoint 폴링 읽기 실패", "OCR/PM EndPoint 폴링 읽기 실패", "EndPoint 폴링 읽기에 실패했습니다.");
+    public static readonly LogDefinition EndpointConnectionRecovered = new("COM-END-008", LogCategory.Communication, LogLevel.Info, "EndPoint 연결 복구", "OCR/PM EndPoint 연결 복구", "EndPoint 연결이 복구되었습니다.");
 
     public static readonly LogDefinition EndpointSettingsApplied = new("SET-END-001", LogCategory.SettingChange, LogLevel.Info, "EndPoint 설정 적용", "OCR/PM EndPoint 설정 적용", "EndPoint 설정이 적용되었습니다.");
     public static readonly LogDefinition EndpointSettingsEmpty = new("SET-END-002", LogCategory.SettingChange, LogLevel.Warn, "EndPoint 설정 적용 대상 없음", "선택된 OCR/PM EndPoint 없음", "적용할 EndPoint가 없습니다.");
@@ -109,6 +111,8 @@ public static class LogDefinitions
         EndpointRegisterWriteFailed,
         EndpointRegisterBlockWrite,
         EndpointRegisterBlockWriteFailed,
+        EndpointPollingReadFailed,
+        EndpointConnectionRecovered,
         EndpointSettingsApplied,
         EndpointSettingsEmpty,
         AlarmRetryExhausted,

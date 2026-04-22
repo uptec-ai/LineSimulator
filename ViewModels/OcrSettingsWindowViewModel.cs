@@ -14,6 +14,7 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
     private const ushort IpAddressRegisterCount = 4;
 
     private readonly LineSimulatorViewModel _lineSimulator;
+    private readonly Window? _ownerWindow;
     private OvrEndpointSettingsModel? _selectedOcrEndpoint;
     private string _ipAddressText = string.Empty;
     private bool _networkWriteAccess;
@@ -22,9 +23,10 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
     private string _statusMessage = "활성화된 OCR을 선택하면 현재 설정을 불러옵니다.";
     private bool _isLoadingSettings;
 
-    public OcrSettingsWindowViewModel(LineSimulatorViewModel lineSimulator)
+    public OcrSettingsWindowViewModel(LineSimulatorViewModel lineSimulator, Window? ownerWindow = null)
     {
         _lineSimulator = lineSimulator;
+        _ownerWindow = ownerWindow;
 
         EnabledOcrEndpoints = [];
         EnabledPmEndpoints = [];
@@ -129,6 +131,11 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
             ? "-"
             : $"{SelectedOcrEndpoint.IpAddress}:{SelectedOcrEndpoint.Port} / Slave {SelectedOcrEndpoint.SlaveId}";
 
+    public string EnabledOcrSummary =>
+        EnabledOcrEndpoints.Count == 0
+            ? "활성화된 OCR이 없습니다."
+            : string.Join(", ", EnabledOcrEndpoints.Select(endpoint => endpoint.DeviceKey));
+
     public string EnabledPmSummary =>
         EnabledPmEndpoints.Count == 0
             ? "활성화된 PM이 없습니다."
@@ -171,6 +178,7 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
             EnabledPmEndpoints.Add(endpoint);
         }
 
+        RaisePropertyChanged(nameof(EnabledOcrSummary));
         RaisePropertyChanged(nameof(EnabledPmSummary));
 
         SelectedOcrEndpoint =
@@ -219,7 +227,7 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
         {
             _isLoadingSettings = false;
             StatusMessage = $"설정 읽기 실패: {ex.Message}";
-            MessageBox.Show(
+            ShowMessageBox(
                 $"{SelectedOcrEndpoint.DeviceKey} 설정을 읽는 중 오류가 발생했습니다.\n{ex.Message}",
                 "OCR Settings",
                 MessageBoxButton.OK,
@@ -236,7 +244,7 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
 
         if (!TryParseIpAddress(IpAddressText, out var values))
         {
-            MessageBox.Show(
+            ShowMessageBox(
                 "IP 주소 형식이 올바르지 않습니다.\n예: 192.168.0.10",
                 "IP 변경",
                 MessageBoxButton.OK,
@@ -246,22 +254,28 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
 
         var endpointName = SelectedOcrEndpoint.DeviceKey;
         var message = $"{endpointName}의 IP 주소를 {string.Join(".", values)} 로 변경하시겠습니까?";
-        if (MessageBox.Show(message, "IP 변경", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
+        if (ShowMessageBox(message, "IP 변경", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
         {
             return;
         }
 
-        await _lineSimulator.WriteOvrEndpointRegistersAsync(endpointName, IpAddressStartAddress, values);
+        for (var index = 0; index < values.Length; index++)
+        {
+            await _lineSimulator.WriteOvrEndpointRegisterAsync(
+                endpointName,
+                (ushort)(IpAddressStartAddress + index),
+                values[index]);
+        }
         await LoadSelectedOcrSettingsAsync();
 
         var updatedIp = string.Join(".", values.Select(value => value.ToString()));
         if (string.Equals(IpAddressText, updatedIp, StringComparison.Ordinal))
         {
-            MessageBox.Show("IP 주소를 변경했습니다.", "IP 변경", MessageBoxButton.OK, MessageBoxImage.Information);
+            ShowMessageBox("IP 주소를 변경했습니다.", "IP 변경", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        MessageBox.Show(
+        ShowMessageBox(
             "IP 주소 쓰기 후 재조회 값이 요청한 값과 다릅니다.",
             "IP 변경",
             MessageBoxButton.OK,
@@ -298,7 +312,7 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
                 _isLoadingSettings = false;
             }
 
-            MessageBox.Show(
+            ShowMessageBox(
                 "Network Write Access 쓰기 후 재조회 값이 요청한 값과 다릅니다.",
                 "Network Write Access",
                 MessageBoxButton.OK,
@@ -307,7 +321,7 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
         catch (Exception ex)
         {
             await LoadSelectedOcrSettingsAsync();
-            MessageBox.Show(
+            ShowMessageBox(
                 $"Network Write Access 변경 중 오류가 발생했습니다.\n{ex.Message}",
                 "Network Write Access",
                 MessageBoxButton.OK,
@@ -352,7 +366,7 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
 
         if (!ushort.TryParse(inputText, out var value) || value < minValue || value > maxValue)
         {
-            MessageBox.Show(
+            ShowMessageBox(
                 $"{registerName} 값 범위가 올바르지 않습니다.\n허용 범위: {minValue} ~ {maxValue}",
                 $"{registerName} 변경",
                 MessageBoxButton.OK,
@@ -362,7 +376,7 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
 
         var endpointName = SelectedOcrEndpoint.DeviceKey;
         var message = $"{endpointName}의 {registerName} 값을 {value} 로 변경하시겠습니까?";
-        if (MessageBox.Show(message, $"{registerName} 변경", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
+        if (ShowMessageBox(message, $"{registerName} 변경", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
         {
             return;
         }
@@ -372,15 +386,26 @@ public sealed class OcrSettingsWindowViewModel : ObservableObject
 
         if (string.Equals(successGetter(), value.ToString(), StringComparison.Ordinal))
         {
-            MessageBox.Show($"{registerName} 값을 변경했습니다.", $"{registerName} 변경", MessageBoxButton.OK, MessageBoxImage.Information);
+            ShowMessageBox($"{registerName} 값을 변경했습니다.", $"{registerName} 변경", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        MessageBox.Show(
+        ShowMessageBox(
             $"{registerName} 쓰기 후 재조회 값이 요청한 값과 다릅니다.",
             $"{registerName} 변경",
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
+    }
+
+    private MessageBoxResult ShowMessageBox(
+        string message,
+        string caption,
+        MessageBoxButton button,
+        MessageBoxImage icon)
+    {
+        return _ownerWindow is null
+            ? MessageBox.Show(message, caption, button, icon)
+            : MessageBox.Show(_ownerWindow, message, caption, button, icon);
     }
 
     private void ClearLoadedSettings()

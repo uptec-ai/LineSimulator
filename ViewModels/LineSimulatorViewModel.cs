@@ -129,8 +129,13 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         foreach (var endpoint in State.OvrSettings.Endpoints)
         {
-            endpoint.CurrentRegisterAddress = 500; // 기본적으로 전류값이 읽히는 레지스터 주소
-            endpoint.CurrentScale = 0.01; // 기본적으로 전류값이 읽히는 레지스터 주소
+            if (!endpoint.IsOvr)
+            {
+                continue;
+            }
+
+            endpoint.CurrentRegisterAddress = 500; // EOCR 기본 전류 레지스터 주소
+            endpoint.CurrentScale = 0.01; // EOCR 전류 스케일
         }
     }
     #endregion
@@ -170,7 +175,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     public DeviceDetailWindowViewModel CreateDeviceDetailViewModel(string deviceKey)
     {
         var endpoint = FindEndpointOrThrow(deviceKey);
-        return new DeviceDetailWindowViewModel(endpoint, EndpointRegisterStartAddress);
+        return new DeviceDetailWindowViewModel(endpoint, endpoint.ProtocolProfile.ReadStartAddress);
     }
 
     private static ushort FeedbackStartAddress => KCatalog.All.Min(item => item.FeedbackAddress);
@@ -520,36 +525,58 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         try
         {
-            var busItems = McItems
-                .Where(item => item.AssignedBus == busName)
-                .OrderByDescending(item => item.Number)
-                .ToArray();
-
-            foreach (var mc in busItems)
+            if (!State.Connection.IsConnected)
             {
-                var kItem = ResolveKItem(mc.Number, busName);
-                var turnedOff = await TurnKOffWithFeedbackCheckAsync(kItem, $"{busName} off");
-                if (!turnedOff)
-                {
-                    AddLog(LogDefinitions.BusStopAborted, $"{busName} off aborted: {kItem.Code} feedback not confirmed.");
-                    return;
-                }
+                AddLog(LogDefinitions.BusStopAborted, $"{busName} stop blocked: Line Simulator disconnected.");
+                return;
             }
 
-            foreach (var mc in busItems)
+            if (!HasActiveBusOutput(busName))
             {
-                mc.AssignedBus = "-";
+                AddLog(LogDefinitions.BusStopAborted, $"{busName} stop skipped: no active KBus found.");
+                return;
+            }
+
+            var stopped = await TurnSingleBusOffAsync(busName);
+            if (!stopped)
+            {
+                return;
             }
 
             _currentPlan = null;
-            SetBusConfigurationLocked(busName, false);
-            SetBusApplied(busName, false);
-            AddLog(LogDefinitions.GetBusStopped(busName), $"{busName} off sequence completed.");
         }
         finally
         {
             EndBusOperation();
         }
+    }
+
+    private async Task<bool> TurnSingleBusOffAsync(string busName)
+    {
+        var targetItems = KItems
+            .Where(item => string.Equals(item.TargetBus, busName, StringComparison.OrdinalIgnoreCase) && item.IsOn)
+            .OrderByDescending(item => item.Number)
+            .ToArray();
+
+        foreach (var kItem in targetItems)
+        {
+            var turnedOff = await TurnKOffWithFeedbackCheckAsync(kItem, $"{busName} off");
+            if (!turnedOff)
+            {
+                AddLog(LogDefinitions.BusStopAborted, $"{busName} off aborted: {kItem.Code} feedback not confirmed.");
+                return false;
+            }
+        }
+
+        foreach (var mc in McItems.Where(item => item.AssignedBus == busName))
+        {
+            mc.AssignedBus = "-";
+        }
+
+        SetBusConfigurationLocked(busName, false);
+        SetBusApplied(busName, false);
+        AddLog(LogDefinitions.GetBusStopped(busName), $"{busName} off sequence completed.");
+        return true;
     }
 
     private async Task HandleDiagramKBusClickAsync(string kCode)
@@ -1085,18 +1112,12 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
     private bool CanOffBus(string busName)
     {
-        if (_isBusOperationRunning)
+        if (_isBusOperationRunning || !State.Connection.IsConnected)
         {
             return false;
         }
 
-        return busName switch
-        {
-            "BUS1" => State.Bus1.IsApplied,
-            "BUS2" => State.Bus2.IsApplied,
-            "BUS3" => State.Bus3.IsApplied,
-            _ => false,
-        };
+        return HasActiveBusOutput(busName);
     }
 
     private void SetBusApplied(string busName, bool isApplied)
@@ -1139,6 +1160,24 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         State.Bus1.IsConfigurationLocked = false;
         State.Bus2.IsConfigurationLocked = false;
         State.Bus3.IsConfigurationLocked = false;
+    }
+
+    private bool IsBusApplied(string busName)
+    {
+        return busName switch
+        {
+            "BUS1" => State.Bus1.IsApplied,
+            "BUS2" => State.Bus2.IsApplied,
+            "BUS3" => State.Bus3.IsApplied,
+            _ => false,
+        };
+    }
+
+    private bool HasActiveBusOutput(string busName)
+    {
+        return KItems.Any(item =>
+            string.Equals(item.TargetBus, busName, StringComparison.OrdinalIgnoreCase) &&
+            item.IsOn);
     }
 
     private bool TryBeginBusOperation()
@@ -1324,6 +1363,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 isConnected: false,
                 currentValue: null,
                 statusText: snapshot.Status.Value);
+            snapshot.Endpoint.ApplyPowerMeterMeasurements(null);
             snapshot.Endpoint.Info = snapshot.Info ?? string.Empty;
         }
     }
@@ -1358,7 +1398,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             try
             {
@@ -1369,7 +1409,14 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 // ignore endpoint shutdown errors
             }
 
-            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
+            return new EndpointReadSnapshot(
+                endpoint,
+                false,
+                null,
+                EndpointStatus.Disable,
+                [],
+                Source: EndpointSnapshotSource.Polling,
+                Message: ex.Message);
         }
         finally
         {
@@ -1439,6 +1486,11 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     #region EndPoint Communication
     private async Task ApplyOvrSettingsAsync()
     {
+        foreach (var endpoint in State.OvrSettings.Endpoints)
+        {
+            endpoint.IsEnabled = endpoint.PendingIsEnabled;
+        }
+
         await StopOvrPollingAsync(disconnectSockets: false);
 
         var snapshots = await Task.WhenAll(State.OvrSettings.Endpoints.Select(endpoint => ConfigureEndpointAsync(endpoint, CancellationToken.None)));
@@ -1499,8 +1551,32 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         foreach (var snapshot in snapshots)
         {
+            if (!snapshot.Endpoint.IsEnabled)
+            {
+                continue;
+            }
+
+            var wasConnected = snapshot.Endpoint.IsConnected;
+
+            if (snapshot.Source == EndpointSnapshotSource.Polling)
+            {
+                if (wasConnected && !snapshot.IsConnected)
+                {
+                    AddLog(
+                        LogDefinitions.EndpointPollingReadFailed,
+                        $"{snapshot.Endpoint.Name} polling read failed: {snapshot.Message ?? "Disconnected"}");
+                }
+                else if (!wasConnected && snapshot.IsConnected)
+                {
+                    AddLog(
+                        LogDefinitions.EndpointConnectionRecovered,
+                        $"{snapshot.Endpoint.Name} connection recovered.");
+                }
+            }
+
             // 각 스냅샷의 연결 상태, 현재값, 상태 텍스트, 레지스터 값을 엔드포인트에 적용하여 뷰에 반영함
             snapshot.Endpoint.ApplyReadResult(snapshot.IsConnected, snapshot.CurrentValue, snapshot.Status, snapshot.Registers);
+            snapshot.Endpoint.ApplyPowerMeterMeasurements(snapshot.PowerMeterMeasurement);
             currentValues[snapshot.Endpoint.DeviceKey] = snapshot.CurrentValue;
         }
 
@@ -1525,10 +1601,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 throw new InvalidOperationException($"OVR/PM endpoint '{endpoint.Name}' is not enabled.");
             }
 
-            if (!endpoint.Socket.IsConnected)
-            {
-                await endpoint.Socket.ConnectAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
-            }
+            await endpoint.Socket.EnsureConnectedAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
 
             var slaveId = ResolveSlaveId(endpoint);
             return await endpoint.Socket.ReadHoldingRegistersAsync(slaveId, startAddress, numberOfPoints, cancellationToken);
@@ -1596,13 +1669,10 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             if (!endpoint.IsEnabled)
             {
-                return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
+                return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, [], Source: EndpointSnapshotSource.Write);
             }
 
-            if (!endpoint.Socket.IsConnected)
-            {
-                await endpoint.Socket.ConnectAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
-            }
+            await endpoint.Socket.EnsureConnectedAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
 
             var slaveId = ResolveSlaveId(endpoint); // Slave ID는 Endpoint 설정의 SlaveId 또는 UnitId에서 가져오며, 1~247 범위로 클램프됨
 
@@ -1632,7 +1702,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 // ignore endpoint shutdown errors
             }
 
-            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
+            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, [], Source: EndpointSnapshotSource.Write);
         }
         finally
         {
@@ -1661,15 +1731,12 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
             if (!endpoint.IsEnabled)
             {
                 await endpoint.Socket.DisconnectAsync();
-                return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
+                return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, [], Source: EndpointSnapshotSource.Configuration);
             }
 
-            if (!endpoint.Socket.IsConnected)
-            {
-                await endpoint.Socket.ConnectAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
-            }
+            await endpoint.Socket.EnsureConnectedAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
 
-            return new EndpointReadSnapshot(endpoint, true, endpoint.CurrentValue, EndpointStatus.Enable, endpoint.RegisterSnapshot.ToArray());
+            return new EndpointReadSnapshot(endpoint, true, endpoint.CurrentValue, EndpointStatus.Enable, endpoint.RegisterSnapshot.ToArray(), Source: EndpointSnapshotSource.Configuration);
         }
         catch (OperationCanceledException)
         {
@@ -1686,7 +1753,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
                 // ignore endpoint shutdown errors
             }
 
-            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
+            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, [], Source: EndpointSnapshotSource.Configuration);
         }
         finally
         {
@@ -1701,32 +1768,104 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     {
         if (!endpoint.IsEnabled)
         {
-            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, []);
+            return new EndpointReadSnapshot(endpoint, false, null, EndpointStatus.Disable, [], Source: EndpointSnapshotSource.Polling);
         }
 
-        if (!endpoint.Socket.IsConnected)
-        {
-            await endpoint.Socket.ConnectAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
-        }
+        await endpoint.Socket.EnsureConnectedAsync(endpoint.IpAddress, endpoint.Port, cancellationToken);
 
         var slaveId = ResolveSlaveId(endpoint);
-        var registers = await endpoint.Socket.ReadHoldingRegistersAsync(slaveId, EndpointRegisterStartAddress, EndpointRegisterCount, cancellationToken);
+        var protocolProfile = endpoint.ProtocolProfile;
+        var readStartAddress = protocolProfile.ReadStartAddress;
+        var readRegisterCount = protocolProfile.ReadRegisterCount;
+
+        var registers = endpoint.ReadFromInputRegisters
+            ? await endpoint.Socket.ReadInputRegistersAsync(slaveId, readStartAddress, readRegisterCount, cancellationToken)
+            : await endpoint.Socket.ReadHoldingRegistersAsync(slaveId, readStartAddress, readRegisterCount, cancellationToken);
+
+        PowerMeterMeasurementSnapshot? powerMeterMeasurement = endpoint.IsPowerMeter
+            ? ParsePowerMeterMeasurements(endpoint, registers, readStartAddress)
+            : null;
 
         double? currentValue = null;
-        var currentRegisterAddress = endpoint.CurrentRegisterAddress;
-
-        if (currentRegisterAddress >= EndpointRegisterStartAddress &&
-            currentRegisterAddress + 1 < EndpointRegisterStartAddress + registers.Length)
+        if(endpoint.IsPowerMeter) currentValue = powerMeterMeasurement?.AverageCurrent;
+        else
         {
-            var registerIndex = currentRegisterAddress - EndpointRegisterStartAddress;
-            uint rawValue = ((uint)registers[registerIndex] << 16) | registers[registerIndex + 1];
+            var currentRegisterAddress = ResolveCurrentRegisterAddress(endpoint);
+            if (currentRegisterAddress >= readStartAddress &&
+                currentRegisterAddress + 1 < readStartAddress + registers.Length)
+            {
+                var registerIndex = currentRegisterAddress - readStartAddress;
+                uint rawValue = ((uint)registers[registerIndex] << 16) | registers[registerIndex + 1];
 
-            currentValue = rawValue * endpoint.CurrentScale;
+                var registerDefinition = endpoint.RegisterDefinitions.FirstOrDefault(
+                    definition => definition.Address == endpoint.CurrentRegisterAddress);
+
+                currentValue = registerDefinition?.Format == EndpointValueFormat.Ieee754Float32
+                    ? BitConverter.Int32BitsToSingle((int)rawValue)
+                    : rawValue * endpoint.CurrentScale;
+            }
         }
 
         EndpointStatus status = EndpointStatus.Enable;
 
-        return new EndpointReadSnapshot(endpoint, true, currentValue, status, registers);
+        return new EndpointReadSnapshot(endpoint, true, currentValue, status, registers, powerMeterMeasurement, EndpointSnapshotSource.Polling);
+    }
+
+    private static PowerMeterMeasurementSnapshot ParsePowerMeterMeasurements(
+        OvrEndpointSettingsModel endpoint,
+        IReadOnlyList<ushort> registers,
+        ushort readStartAddress)
+    {
+        return new PowerMeterMeasurementSnapshot(
+            AverageVoltage: TryReadFloatRegister(endpoint, registers, readStartAddress, 30001),
+            AverageCurrent: TryReadFloatRegister(endpoint, registers, readStartAddress, 30003),
+            PowerFactor: TryReadFloatRegister(endpoint, registers, readStartAddress, 30023),
+            TotalActivePower: TryReadFloatRegister(endpoint, registers, readStartAddress, 30025),
+            Frequency: TryReadFloatRegister(endpoint, registers, readStartAddress, 30031));
+    }
+
+    private static double? TryReadFloatRegister(
+        OvrEndpointSettingsModel endpoint,
+        IReadOnlyList<ushort> registers,
+        ushort readStartAddress,
+        int address)
+    {
+        var registerDefinition = endpoint.RegisterDefinitions.FirstOrDefault(
+            definition => definition.Address == address);
+
+        if (registerDefinition is null)
+        {
+            return null;
+        }
+
+        var registerIndex = registerDefinition.ModbusStartAddress - readStartAddress;
+        if (registerIndex < 0 || registerIndex + 1 >= registers.Count)
+        {
+            return null;
+        }
+
+        uint rawValue = ((uint)registers[registerIndex] << 16) | registers[registerIndex + 1];
+        return BitConverter.Int32BitsToSingle((int)rawValue);
+    }
+
+    private static ushort ResolveCurrentRegisterAddress(OvrEndpointSettingsModel endpoint)
+    {
+        var registerDefinition = endpoint.RegisterDefinitions.FirstOrDefault(
+            definition => definition.Address == endpoint.CurrentRegisterAddress);
+
+        if (registerDefinition is not null)
+        {
+            return registerDefinition.ModbusStartAddress;
+        }
+
+        return (ushort)Math.Max(0, endpoint.CurrentRegisterAddress);
+    }
+
+    private enum EndpointSnapshotSource
+    {
+        Polling,
+        Configuration,
+        Write,
     }
 
     private sealed record EndpointReadSnapshot(
@@ -1734,7 +1873,10 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         bool IsConnected,
         double? CurrentValue,
         EndpointStatus Status,
-        IReadOnlyList<ushort> Registers);
+        IReadOnlyList<ushort> Registers,
+        PowerMeterMeasurementSnapshot? PowerMeterMeasurement = null,
+        EndpointSnapshotSource Source = EndpointSnapshotSource.Polling,
+        string? Message = null);
 
     private sealed record EndpointIdleSnapshot(
         OvrEndpointSettingsModel Endpoint,
@@ -1917,6 +2059,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         }
 
         SyncBusDiagramFeedback();
+        RaiseBusCommandCanExecuteChanged();
     }
 
     private async Task DisconnectCoreAsync(string logMessage, bool stopPolling)
@@ -2023,6 +2166,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             kItem.IsOn = isOn;
             SyncBusDiagramFeedback();
+            RaiseBusCommandCanExecuteChanged();
             return;
         }
 
@@ -2035,6 +2179,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         {
             kItem.IsOn = isOn;
             SyncBusDiagramFeedback();
+            RaiseBusCommandCanExecuteChanged();
         });
     }
     #endregion

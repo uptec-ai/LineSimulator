@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
     <ApplicationIcon>Assets\64xLogo.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -43,6 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
+	  <PackageReference Include="DevExpress.Wpf.Core" Version="24.2.14" />
 	  <PackageReference Include="NModbus" Version="3.0.81" />
 	  <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
 	  <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />

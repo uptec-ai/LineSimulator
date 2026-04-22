@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media;
 using DevExpress.Mvvm;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Media;
 
 namespace TestMcAlgorithm.ViewModels
 {
@@ -69,9 +69,9 @@ namespace TestMcAlgorithm.ViewModels
 
             Outputs =
             [
-                new BusOutputItem("BUS OUT #1", 745, 34, 111, OutputPathBrush),
-                new BusOutputItem("BUS OUT #2", 885, 34, 111, OutputPathBrush),
-                new BusOutputItem("BUS OUT #3", 1095, 34, 111, OutputPathBrush),
+                new BusOutputItem("BUS OUT #1", 745, 34, 111, OutputPathBrush, new McMarkerItem("PM2", "PM2")),
+                new BusOutputItem("BUS OUT #2", 885, 34, 111, OutputPathBrush, new McMarkerItem("PM3", "PM3")),
+                new BusOutputItem("BUS OUT #3", 1095, 34, 111, OutputPathBrush, new McMarkerItem("PM4", "PM4")),
 
                 new BusOutputItem("NBUS OUT #1", 1354, 34, 111, OutputPathBrush),
                 new BusOutputItem("NBUS OUT #2", 1496, 34, 111, OutputPathBrush),
@@ -109,7 +109,7 @@ namespace TestMcAlgorithm.ViewModels
                         ("OCR9", ["K15", "K16", "K17"]),
                         ("OCR10", ["K28", "K29"]),
                     ]),
-                pmMarker: new McMarkerItem("PM", "PM1"),
+                pmMarker: new McMarkerItem("PM1", "PM1"),
                 inRails: CreateInRails(1265),
                 outputStartIndex: 0,
                 inputStemX: 714,
@@ -191,6 +191,13 @@ namespace TestMcAlgorithm.ViewModels
             foreach (var marker in Sections.SelectMany(section => EnumerateMarkers(section)))
             {
                 marker.CurrentValue = currentValues.TryGetValue(marker.DeviceName, out var value) ? value : null;
+            }
+
+            foreach (var marker in Outputs
+                .Select(output => output.PmMarker)
+                .Where(marker => marker is not null))
+            {
+                marker!.CurrentValue = currentValues.TryGetValue(marker.DeviceName, out var value) ? value : null;
             }
         }
 
@@ -358,13 +365,14 @@ namespace TestMcAlgorithm.ViewModels
         private bool _isOn;
         private Brush _pathBrush;
 
-        public BusOutputItem(string title, double left, double top, double dropHeight, Brush pathBrush)
+        public BusOutputItem(string title, double left, double top, double dropHeight, Brush pathBrush, McMarkerItem? pmMarker = null)
         {
             Title = title;
             Left = left;
             Top = top;
             DropHeight = dropHeight;
             _pathBrush = pathBrush;
+            PmMarker = pmMarker;
         }
 
         public string Title { get; }
@@ -376,6 +384,10 @@ namespace TestMcAlgorithm.ViewModels
         public double DropHeight { get; }
 
         public double ContactTop => DropHeight - 2.75;
+
+        public McMarkerItem? PmMarker { get; }
+
+        public bool HasPmMarker => PmMarker is not null;
 
         public bool IsOn
         {

@@ -10,7 +10,7 @@ public sealed class ModbusTcpEndpointClient : IAsyncDisposable
     private TcpClient? _client;
     private IModbusMaster? _master;
 
-    public bool IsConnected => _client?.Connected == true && _master is not null;
+    public bool IsConnected => IsSocketHealthy(_client, _master);
 
     public async Task ConnectAsync(string host, int port, CancellationToken cancellationToken)
     {
@@ -27,6 +27,16 @@ public sealed class ModbusTcpEndpointClient : IAsyncDisposable
 
         _client = client;
         _master = _modbusFactory.CreateMaster(client);
+    }
+
+    public async Task EnsureConnectedAsync(string host, int port, CancellationToken cancellationToken)
+    {
+        if (IsConnected)
+        {
+            return;
+        }
+
+        await ConnectAsync(host, port, cancellationToken);
     }
 
     public Task DisconnectAsync()
@@ -93,5 +103,31 @@ public sealed class ModbusTcpEndpointClient : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await DisconnectAsync();
+    }
+
+    private static bool IsSocketHealthy(TcpClient? client, IModbusMaster? master)
+    {
+        if (client?.Client is not Socket socket || master is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!socket.Connected)
+            {
+                return false;
+            }
+
+            return !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
+        }
+        catch (SocketException)
+        {
+            return false;
+        }
+        catch (ObjectDisposedException)
+        {
+            return false;
+        }
     }
 }

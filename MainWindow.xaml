@@ -268,8 +268,8 @@
                         <StackPanel Grid.Column="1" Orientation="Vertical">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
 
-                                <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="22,0,0,0" Command="{Binding LineSimulator.Bus1ApplyCommand}"/>
-                                <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus1OffCommand}" Margin="12,0,0,0"/>
+                                <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="22,0,0,0" Command="{Binding LineSimulator.Bus2ApplyCommand}"/>
+                                <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus2OffCommand}" Margin="12,0,0,0"/>
                             </StackPanel>
                             <ComboBox Style="{StaticResource BusComboStyle}"
                                       IsEnabled="{Binding LineSimulator.CanEditBus2Settings}"
@@ -302,8 +302,8 @@
                         <StackPanel Grid.Column="1" Orientation="Vertical">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
 
-                                <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="22,0,0,0" Command="{Binding LineSimulator.Bus1ApplyCommand}"/>
-                                <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus1OffCommand}" Margin="12,0,0,0"/>
+                                <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="22,0,0,0" Command="{Binding LineSimulator.Bus3ApplyCommand}"/>
+                                <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus3OffCommand}" Margin="12,0,0,0"/>
                             </StackPanel>
                             <ComboBox Style="{StaticResource BusComboStyle}"
                                       IsEnabled="{Binding LineSimulator.CanEditBus3Settings}"
@@ -317,7 +317,7 @@
                                       ItemStringFormat="{}{0:g}" Width="180" Margin="20,5,0,2" Height="30"/>
                         </StackPanel>
 
-                        <TextBlock Grid.ColumnSpan="2" Text="{Binding State.Bus2.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Bottom"/>
+                        <TextBlock Grid.ColumnSpan="2" Text="{Binding State.Bus3.Summary}" Foreground="#E2E8F0" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Bottom"/>
                     </Grid>
                 </Border>
             </Grid>
@@ -667,7 +667,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전류 #1" Grid.Column="1" TextWrapping="Wrap" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="OUT#1 전류" Grid.Column="1" TextWrapping="Wrap" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                         <Label Content="{Binding LineSimulator.NBusOut1}" ContentStringFormat="{}{0:F2}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
@@ -682,7 +682,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전류 #2" Grid.Column="1" TextWrapping="Wrap" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="OUT#2 전류" Grid.Column="1" TextWrapping="Wrap" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                         <Label Content="{Binding LineSimulator.NBusOut2}" ContentStringFormat="{}{0:F2}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
@@ -697,7 +697,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
-                                        <TextBlock Text="전류 #3" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="OUT#3 전류" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                         <Label Content="{Binding LineSimulator.NBusOut3}" ContentStringFormat="{}{0:F2}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>

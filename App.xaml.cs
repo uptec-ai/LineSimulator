@@ -1,3 +1,6 @@
+using DevExpress.Mvvm;
+using DevExpress.Xpf.Core;
+using DevExpress.Xpf.Core.Native;
 using System.ComponentModel;
 using System.IO;
 using System.Reflection;
@@ -30,6 +33,28 @@ public partial class App : Application, INotifyPropertyChanged
             _currentTime = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTime)));
         }
+    }
+    protected override async void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        var splash = SplashScreenManager.Create(() => new FluentSplashScreen(), new DXSplashScreenViewModel
+        {
+            IsIndeterminate = true,
+            Title = "Line Simulator Application Started..",
+            Subtitle = "Version 1.0",
+            Logo = new Uri(@"pack://application:,,,/Assets/upteclogowhite32.png", UriKind.Absolute),
+            Copyright = "UPTec\r\nwww.up-tec.co.kr",
+        });
+
+        splash.ShowOnStartup();
+        await Task.Delay(2000);
+
+        var mainWindow = new MainWindow();
+        MainWindow = mainWindow;
+        mainWindow.Show();
+
+        splash.Close(true);
     }
     public App()
     {

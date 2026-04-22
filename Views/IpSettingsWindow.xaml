@@ -110,7 +110,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Text="Line Simulator" Foreground="White" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                <dxe:TextEdit Grid.Column="1" Height="30" Margin="0,0,12,0" EditValue="{Binding State.Connection.IpAddress, UpdateSourceTrigger=PropertyChanged}"/>
+                <dxe:TextEdit Grid.Column="1" Height="30" Margin="0,0,12,0" EditValue="{Binding State.Connection.IpAddress, UpdateSourceTrigger=PropertyChanged}" NullText="예: 127.0.0.1"/>
                 <dxe:SpinEdit Grid.Column="3" Height="30" Margin="0,0,12,0" EditValue="{Binding State.Connection.Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinValue="1" MaxValue="65535"/>
                 <dxe:SpinEdit Grid.Column="5" Height="30" Margin="0,0,12,0" EditValue="{Binding State.Connection.UnitId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinValue="1" MaxValue="247"/>
                 <dx:SimpleButton Grid.Column="6" Content="Connect" Width="100" Height="30" Margin="0,0,8,0" Command="{Binding ConnectCommand}"/>
@@ -132,9 +132,9 @@
                   GridLinesVisibility="Horizontal"
                   RowHeaderWidth="0">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="Use" Binding="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="55" ElementStyle="{StaticResource OvrDataGridCheckBoxStyle}" EditingElementStyle="{StaticResource OvrDataGridCheckBoxStyle}"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" Width="100" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
-                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="160" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                <DataGridCheckBoxColumn Header="Use" Binding="{Binding PendingIsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="55" ElementStyle="{StaticResource OvrDataGridCheckBoxStyle}" EditingElementStyle="{StaticResource OvrDataGridCheckBoxStyle}"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" Width="120" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
+                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
                 <DataGridTextColumn Header="Port" Binding="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="70" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
                 <DataGridTextColumn Header="Unit ID" Binding="{Binding UnitId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="70" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
                 <DataGridTextColumn Header="Slave ID" Binding="{Binding SlaveId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="75" ElementStyle="{StaticResource OvrDataGridTextBlockStyle}" EditingElementStyle="{StaticResource OvrDataGridEditingTextBoxStyle}"/>
@@ -147,6 +147,8 @@
         </DataGrid>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <dx:SimpleButton Content="Check Idle Use" Width="140" Height="34" Margin="0,0,8,0" Command="{Binding CheckAllIdleUseCommand}"/>
+            <dx:SimpleButton Content="Uncheck Enable Use" Width="160" Height="34" Margin="0,0,8,0" Command="{Binding UncheckAllEnabledUseCommand}"/>
             <dx:SimpleButton Content="Close" Width="100" Height="34" Margin="0,0,8,0" Command="{Binding CloseCommand}"/>
             <dx:SimpleButton Content="Apply" Width="120" Height="34" Command="{Binding ApplyOvrSettingsCommand}"/>
         </StackPanel>
