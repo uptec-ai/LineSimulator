@@ -73,11 +73,40 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        if (DataContext is IDisposable disposable)
+        using var forceExitCts = new CancellationTokenSource();
+        _ = Task.Run(async () =>
         {
-            disposable.Dispose();
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3), forceExitCts.Token);
+                Environment.Exit(0);
+            }
+            catch (OperationCanceledException)
+            {
+                // normal shutdown completed before the fallback was needed
+            }
+        });
+
+        try
+        {
+            if (DataContext is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+        finally
+        {
+            forceExitCts.Cancel();
         }
 
+        DataContext = null;
         base.OnClosed(e);
+
+        if (Application.Current?.ShutdownMode != ShutdownMode.OnExplicitShutdown)
+        {
+            Application.Current?.Shutdown();
+        }
+
+        Environment.Exit(0);
     }
 }

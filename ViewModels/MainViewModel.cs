@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows;
 using TestMcAlgorithm.Models;
 using TestMcAlgorithm.Services;
@@ -11,10 +12,49 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private OcrSettingsWindow? _ocrSettingsWindow;
     private LogWindow? _logWindow;
     private DeviceDetailWindow? _deviceDetailWindow;
+    private readonly ModbusTcpMonitoringServer _monitoringServer;
+    private int _activeMonitoringClientCount;
+    private bool _isMonitoringServerRunning;
     public LineSimulatorViewModel LineSimulator { get; }
     public MainScreenStateModel State => LineSimulator.State;
 
     public BusDiagram BusDiagram => LineSimulator.BusDiagram;
+
+    public ObservableCollection<ModbusMonitoringClientModel> MonitoringClients { get; } = [];
+
+    public string MonitoringServerEndpointText =>
+        $"{ModbusProtocolDefinitions.ServerHost}:{ModbusProtocolDefinitions.ServerPort}";
+
+    public int MonitoringMaxClientCount => ModbusProtocolDefinitions.MaxMonitoringClients;
+
+    public int ActiveMonitoringClientCount
+    {
+        get => _activeMonitoringClientCount;
+        private set
+        {
+            if (SetProperty(ref _activeMonitoringClientCount, value))
+            {
+                RaisePropertyChanged(nameof(MonitoringServerStatusText));
+            }
+        }
+    }
+
+    public bool IsMonitoringServerRunning
+    {
+        get => _isMonitoringServerRunning;
+        private set
+        {
+            if (SetProperty(ref _isMonitoringServerRunning, value))
+            {
+                RaisePropertyChanged(nameof(MonitoringServerStatusText));
+            }
+        }
+    }
+
+    public string MonitoringServerStatusText =>
+        IsMonitoringServerRunning
+            ? $"Running / Clients {ActiveMonitoringClientCount}/{MonitoringMaxClientCount}"
+            : "Stopped";
 
     public RelayCommand ShowIpSettingsWindowCommand { get; }
     public RelayCommand ShowOcrSettingsWindowCommand { get; }
@@ -24,6 +64,22 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         LineSimulator = new LineSimulatorViewModel(algorithmService, modbusGatewayService);
         LineSimulator.DeviceDetailRequested += OnDeviceDetailRequested;
+        _monitoringServer = new ModbusTcpMonitoringServer(LineSimulator.CreateMonitoringSnapshot);
+        _monitoringServer.ClientStatusChanged += OnMonitoringClientStatusChanged;
+        try
+        {
+            _monitoringServer.StartAsync().GetAwaiter().GetResult();
+            IsMonitoringServerRunning = _monitoringServer.IsRunning;
+        }
+        catch (Exception ex)
+        {
+            IsMonitoringServerRunning = false;
+            MessageBox.Show(
+                $"Modbus monitoring server start failed: {ex.Message}",
+                "Modbus Server",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
 
         ShowIpSettingsWindowCommand = new RelayCommand(_ => ShowIpSettingsWindow());
         ShowOcrSettingsWindowCommand = new RelayCommand(_ => ShowOcrSettingsWindow());
@@ -34,7 +90,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         if (_ipSettingsWindow is null || !_ipSettingsWindow.IsLoaded)
         {
-            var viewModel = new IpSettingsWindowViewModel(LineSimulator);
+            var viewModel = new IpSettingsWindowViewModel(this);
             _ipSettingsWindow = new IpSettingsWindow
             {
                 Owner = Application.Current?.MainWindow,
@@ -114,6 +170,34 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _deviceDetailWindow.Activate();
     }
 
+    private void OnMonitoringClientStatusChanged(ModbusMonitoringClientStatus status)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+        {
+            ApplyMonitoringClientStatus(status);
+            return;
+        }
+
+        dispatcher.InvokeAsync(() => ApplyMonitoringClientStatus(status));
+    }
+
+    private void ApplyMonitoringClientStatus(ModbusMonitoringClientStatus status)
+    {
+        var item = MonitoringClients.FirstOrDefault(client => client.ClientId == status.ClientId);
+        if (item is null)
+        {
+            item = new ModbusMonitoringClientModel(status);
+            MonitoringClients.Insert(0, item);
+        }
+        else
+        {
+            item.Apply(status);
+        }
+
+        ActiveMonitoringClientCount = MonitoringClients.Count(client => client.IsConnected);
+    }
+
     public void RequestShutdown()
     {
         _ipSettingsWindow?.Close();
@@ -131,6 +215,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         LineSimulator.DeviceDetailRequested -= OnDeviceDetailRequested;
+        _monitoringServer.ClientStatusChanged -= OnMonitoringClientStatusChanged;
+        _monitoringServer.DisposeAsync().AsTask().GetAwaiter().GetResult();
         _ipSettingsWindow?.Close();
         _ocrSettingsWindow?.Close();
         _logWindow?.Close();

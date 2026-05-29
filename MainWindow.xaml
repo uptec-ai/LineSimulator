@@ -232,7 +232,6 @@
 
                         <StackPanel Grid.Column="1" Orientation="Vertical">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-
                                 <dx:SimpleButton Content="투입" Width="85" Height="30" Margin="22,0,0,0" Command="{Binding LineSimulator.Bus1ApplyCommand}"/>
                                 <dx:SimpleButton Content="정지" Width="85" Height="30" Command="{Binding LineSimulator.Bus1OffCommand}" Margin="12,0,0,0"/>
                             </StackPanel>

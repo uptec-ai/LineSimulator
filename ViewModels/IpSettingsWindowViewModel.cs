@@ -1,12 +1,14 @@
+using System.Collections.ObjectModel;
 using TestMcAlgorithm.Models;
 
 namespace TestMcAlgorithm.ViewModels;
 
 public sealed class IpSettingsWindowViewModel
 {
-    public IpSettingsWindowViewModel(LineSimulatorViewModel lineSimulator)
+    public IpSettingsWindowViewModel(MainViewModel mainViewModel)
     {
-        LineSimulator = lineSimulator;
+        Main = mainViewModel;
+        LineSimulator = mainViewModel.LineSimulator;
         CheckAllIdleUseCommand = new RelayCommand(_ => CheckAllIdleUse());
         UncheckAllEnabledUseCommand = new RelayCommand(_ => UncheckAllEnabledUse());
         CloseCommand = new RelayCommand(_ => CloseRequested?.Invoke());
@@ -14,9 +16,19 @@ public sealed class IpSettingsWindowViewModel
 
     public event Action? CloseRequested;
 
+    public MainViewModel Main { get; }
+
     public LineSimulatorViewModel LineSimulator { get; }
 
     public MainScreenStateModel State => LineSimulator.State;
+
+    public ObservableCollection<ModbusMonitoringClientModel> MonitoringClients => Main.MonitoringClients;
+
+    public string MonitoringServerEndpointText => Main.MonitoringServerEndpointText;
+
+    public string MonitoringServerStatusText => Main.MonitoringServerStatusText;
+
+    public int MonitoringMaxClientCount => Main.MonitoringMaxClientCount;
 
     public AsyncRelayCommand ConnectCommand => LineSimulator.ConnectCommand;
 

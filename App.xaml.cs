@@ -56,6 +56,14 @@ public partial class App : Application, INotifyPropertyChanged
 
         splash.Close(true);
     }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        dt_timer.Stop();
+        AssemblyLoadContext.Default.Resolving -= ResolveLocalAssembly;
+        base.OnExit(e);
+    }
+
     public App()
     {
         AssemblyLoadContext.Default.Resolving += ResolveLocalAssembly;

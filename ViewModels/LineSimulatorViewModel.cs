@@ -381,6 +381,23 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         await DisconnectAsync();
     }
+
+    public ModbusMonitoringSnapshot CreateMonitoringSnapshot()
+    {
+        return new ModbusMonitoringSnapshot(
+            State.Connection.IsConnected,
+            State.OperationMode.IsManualMode,
+            State.Bus1.IsEnabled,
+            State.Bus2.IsEnabled,
+            State.Bus3.IsEnabled,
+            State.Bus1.IsApplied,
+            State.Bus2.IsApplied,
+            State.Bus3.IsApplied,
+            NBusOut1,
+            NBusOut2,
+            NBusOut3,
+            KItems.ToDictionary(item => item.Code, item => item.IsOn));
+    }
     #endregion
 
     #region MainWindow Bus Planning / Operations
