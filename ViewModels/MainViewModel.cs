@@ -15,6 +15,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly ModbusTcpMonitoringServer _monitoringServer;
     private int _activeMonitoringClientCount;
     private bool _isMonitoringServerRunning;
+    private string _monitoringServerHost = ModbusProtocolDefinitions.ServerHost;
+    private int _monitoringServerPort = ModbusProtocolDefinitions.ServerPort;
     public LineSimulatorViewModel LineSimulator { get; }
     public MainScreenStateModel State => LineSimulator.State;
 
@@ -23,7 +25,32 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<ModbusMonitoringClientModel> MonitoringClients { get; } = [];
 
     public string MonitoringServerEndpointText =>
-        $"{ModbusProtocolDefinitions.ServerHost}:{ModbusProtocolDefinitions.ServerPort}";
+        $"{MonitoringServerHost}:{MonitoringServerPort}";
+
+    public string MonitoringServerHost
+    {
+        get => _monitoringServerHost;
+        set
+        {
+            if (SetProperty(ref _monitoringServerHost, value))
+            {
+                RaisePropertyChanged(nameof(MonitoringServerEndpointText));
+            }
+        }
+    }
+
+    public int MonitoringServerPort
+    {
+        get => _monitoringServerPort;
+        set
+        {
+            var normalizedValue = Math.Clamp(value, 1, 65535);
+            if (SetProperty(ref _monitoringServerPort, normalizedValue))
+            {
+                RaisePropertyChanged(nameof(MonitoringServerEndpointText));
+            }
+        }
+    }
 
     public int MonitoringMaxClientCount => ModbusProtocolDefinitions.MaxMonitoringClients;
 
@@ -59,6 +86,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand ShowIpSettingsWindowCommand { get; }
     public RelayCommand ShowOcrSettingsWindowCommand { get; }
     public RelayCommand ShowLogWindowCommand { get; }
+    public AsyncRelayCommand ApplyMonitoringServerSettingsCommand { get; }
 
     public MainViewModel(McAlgorithmService algorithmService, IModbusGatewayService modbusGatewayService)
     {
@@ -68,7 +96,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _monitoringServer.ClientStatusChanged += OnMonitoringClientStatusChanged;
         try
         {
-            _monitoringServer.StartAsync().GetAwaiter().GetResult();
+            _monitoringServer.StartAsync(MonitoringServerHost, MonitoringServerPort).GetAwaiter().GetResult();
             IsMonitoringServerRunning = _monitoringServer.IsRunning;
         }
         catch (Exception ex)
@@ -84,6 +112,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ShowIpSettingsWindowCommand = new RelayCommand(_ => ShowIpSettingsWindow());
         ShowOcrSettingsWindowCommand = new RelayCommand(_ => ShowOcrSettingsWindow());
         ShowLogWindowCommand = new RelayCommand(_ => ShowLogWindow());
+        ApplyMonitoringServerSettingsCommand = new AsyncRelayCommand(_ => ApplyMonitoringServerSettingsAsync());
     }
 
     private void ShowIpSettingsWindow()
@@ -198,6 +227,28 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ActiveMonitoringClientCount = MonitoringClients.Count(client => client.IsConnected);
     }
 
+    private async Task ApplyMonitoringServerSettingsAsync()
+    {
+        try
+        {
+            IsMonitoringServerRunning = false;
+            await _monitoringServer.StopAsync();
+            MonitoringClients.Clear();
+            ActiveMonitoringClientCount = 0;
+            await _monitoringServer.StartAsync(MonitoringServerHost, MonitoringServerPort);
+            IsMonitoringServerRunning = _monitoringServer.IsRunning;
+        }
+        catch (Exception ex)
+        {
+            IsMonitoringServerRunning = false;
+            MessageBox.Show(
+                $"Modbus monitoring server restart failed: {ex.Message}",
+                "Modbus Server",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
     public void RequestShutdown()
     {
         _ipSettingsWindow?.Close();
@@ -216,11 +267,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         LineSimulator.DeviceDetailRequested -= OnDeviceDetailRequested;
         _monitoringServer.ClientStatusChanged -= OnMonitoringClientStatusChanged;
-        _monitoringServer.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        WaitForShutdownTask(_monitoringServer.DisposeAsync().AsTask());
         _ipSettingsWindow?.Close();
         _ocrSettingsWindow?.Close();
         _logWindow?.Close();
         _deviceDetailWindow?.Close();
         LineSimulator.Dispose();
+    }
+
+    private static void WaitForShutdownTask(Task task)
+    {
+        try
+        {
+            if (task.Wait(TimeSpan.FromMilliseconds(500)))
+            {
+                task.GetAwaiter().GetResult();
+            }
+        }
+        catch
+        {
+            // shutdown path
+        }
     }
 }

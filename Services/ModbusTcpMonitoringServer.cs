@@ -38,15 +38,20 @@ public sealed class ModbusTcpMonitoringServer : IAsyncDisposable
 
     public int ActiveClientCount => _clients.Values.Count(client => client.IsConnected);
 
-    public Task StartAsync(CancellationToken cancellationToken = default)
+    public Task StartAsync(string host, int port, CancellationToken cancellationToken = default)
     {
         if (IsRunning)
         {
             return Task.CompletedTask;
         }
 
+        if (!IPAddress.TryParse(host, out var ipAddress))
+        {
+            throw new ArgumentException($"Invalid monitoring server IP address: {host}", nameof(host));
+        }
+
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        _listener = new TcpListener(IPAddress.Parse(ModbusProtocolDefinitions.ServerHost), ModbusProtocolDefinitions.ServerPort);
+        _listener = new TcpListener(ipAddress, port);
         _listener.Start(ModbusProtocolDefinitions.MaxMonitoringClients);
 
         _refreshTask = RefreshLoopAsync(_cts.Token);
@@ -223,10 +228,7 @@ public sealed class ModbusTcpMonitoringServer : IAsyncDisposable
                 2 => ReadBooleanPoints(functionCode, _dataStore.DiscreteInputs, pdu),
                 3 => ReadRegisters(functionCode, _dataStore.HoldingRegisters, pdu),
                 4 => ReadRegisters(functionCode, _dataStore.InputRegisters, pdu),
-                5 => WriteSingleCoil(pdu),
-                6 => WriteSingleRegister(pdu),
-                15 => WriteMultipleCoils(pdu),
-                16 => WriteMultipleRegisters(pdu),
+                5 or 6 or 15 or 16 => BuildExceptionResponse(functionCode, IllegalFunction),
                 _ => BuildExceptionResponse(functionCode, IllegalFunction)
             };
         }
@@ -259,7 +261,7 @@ public sealed class ModbusTcpMonitoringServer : IAsyncDisposable
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // ¡§ªÛ ¡æ∑·
+            // Ï†ïÏÉÅ Ï¢ÖÎ£å
         }
         catch (Exception ex)
         {
@@ -518,29 +520,19 @@ public sealed class ModbusTcpMonitoringServer : IAsyncDisposable
             return;
         }
 
+        var completedTask = await Task.WhenAny(task, Task.Delay(timeout));
+        if (completedTask != task)
+        {
+            return;
+        }
+
         try
         {
-            await task.WaitAsync(timeout); // do not block indefinitely on tasks that did not unwind promptly during shutdown
+            await task;
         }
-        catch (OperationCanceledException)
+        catch
         {
-            // normal shutdown
-        }
-        catch (TimeoutException)
-        {
-            // do not block application shutdown on a socket wait that did not unwind promptly
-        }
-        catch (ObjectDisposedException)
-        {
-            // normal shutdown
-        }
-        catch (SocketException)
-        {
-            // listener can throw during normal shutdown
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(ex);
+            // shutdown path: canceled/closed socket tasks are expected here
         }
     }
 
@@ -552,33 +544,20 @@ public sealed class ModbusTcpMonitoringServer : IAsyncDisposable
             return;
         }
 
+        var allTasks = Task.WhenAll(tasks);
+        var completedTask = await Task.WhenAny(allTasks, Task.Delay(ShutdownWaitTimeout));
+        if (completedTask != allTasks)
+        {
+            return;
+        }
+
         try
         {
-            await Task.WhenAll(tasks).WaitAsync(ShutdownWaitTimeout);
-        }
-        catch (OperationCanceledException)
-        {
-            // normal shutdown
-        }
-        catch (TimeoutException)
-        {
-            // do not block application shutdown on client handlers that did not unwind promptly
-        }
-        catch (ObjectDisposedException)
-        {
-            // normal shutdown
-        }
-        catch (SocketException)
-        {
-            // sockets are closed during normal shutdown
-        }
-        catch (IOException)
-        {
-            // streams are closed during normal shutdown
+            await allTasks;
         }
         catch
         {
-            // client handlers already publish disconnect state in their finally blocks
+            // shutdown path: canceled/closed client tasks are expected here
         }
     }
 

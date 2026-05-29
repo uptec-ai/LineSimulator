@@ -97,10 +97,10 @@ public static class ModbusProtocolDefinitions
     {
         var points = new List<ModbusProtocolPoint>
         {
-            new(ModbusPointArea.Coil, CoilRemoteStartRequest, 1, "RemoteStartRequest", "Bool", ModbusAccess.ReadWrite, "1", "Reserved writable command coil for future monitoring-system start request."),
-            new(ModbusPointArea.Coil, CoilRemoteStopRequest, 1, "RemoteStopRequest", "Bool", ModbusAccess.ReadWrite, "1", "Reserved writable command coil for future monitoring-system stop request."),
-            new(ModbusPointArea.Coil, CoilAlarmResetRequest, 1, "AlarmResetRequest", "Bool", ModbusAccess.ReadWrite, "1", "Reserved writable command coil for future alarm reset request."),
-            new(ModbusPointArea.Coil, CoilAlarmOutput, 1, "AlarmOutput", "Bool", ModbusAccess.ReadWrite, "1", "Application alarm coil mirror. Currently reserved.")
+            new(ModbusPointArea.Coil, CoilRemoteStartRequest, 1, "RemoteStartRequest", "Bool", ModbusAccess.ReadOnly, "1", "Reserved read-only command mirror. Monitoring server rejects Modbus write functions."),
+            new(ModbusPointArea.Coil, CoilRemoteStopRequest, 1, "RemoteStopRequest", "Bool", ModbusAccess.ReadOnly, "1", "Reserved read-only command mirror. Monitoring server rejects Modbus write functions."),
+            new(ModbusPointArea.Coil, CoilAlarmResetRequest, 1, "AlarmResetRequest", "Bool", ModbusAccess.ReadOnly, "1", "Reserved read-only command mirror. Monitoring server rejects Modbus write functions."),
+            new(ModbusPointArea.Coil, CoilAlarmOutput, 1, "AlarmOutput", "Bool", ModbusAccess.ReadOnly, "1", "Application alarm coil mirror. Monitoring server rejects Modbus write functions.")
         };
 
         points.AddRange(KCatalog.All.Select(item =>
@@ -131,8 +131,8 @@ public static class ModbusProtocolDefinitions
             new(ModbusPointArea.HoldingRegister, HoldingRegisterProtocolMinor, 1, "ProtocolMinorVersion", "UInt16", ModbusAccess.ReadOnly, "1", "Protocol minor version."),
             new(ModbusPointArea.HoldingRegister, HoldingRegisterStatusCode, 1, "StatusCode", "UInt16", ModbusAccess.ReadOnly, "1", "0=Idle, 1=Connected, 2=ManualMode, 3=AlarmOrFault."),
             new(ModbusPointArea.HoldingRegister, HoldingRegisterUnitId, 1, "UnitId", "UInt16", ModbusAccess.ReadOnly, "1", "Modbus unit id served by this app."),
-            new(ModbusPointArea.HoldingRegister, HoldingRegisterRemoteCommand, 1, "RemoteCommand", "UInt16", ModbusAccess.ReadWrite, "1", "Reserved writable command register. 0=None, 1=Start, 2=Stop, 3=AlarmReset."),
-            new(ModbusPointArea.HoldingRegister, HoldingRegisterRemoteCommandSequence, 1, "RemoteCommandSequence", "UInt16", ModbusAccess.ReadWrite, "1", "Reserved writable command sequence number.")
+            new(ModbusPointArea.HoldingRegister, HoldingRegisterRemoteCommand, 1, "RemoteCommand", "UInt16", ModbusAccess.ReadOnly, "1", "Reserved read-only command mirror. Monitoring server rejects Modbus write functions."),
+            new(ModbusPointArea.HoldingRegister, HoldingRegisterRemoteCommandSequence, 1, "RemoteCommandSequence", "UInt16", ModbusAccess.ReadOnly, "1", "Reserved read-only command sequence mirror. Monitoring server rejects Modbus write functions.")
         ]);
 
         return points

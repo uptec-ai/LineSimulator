@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using TestMcAlgorithm.Services;
 using TestMcAlgorithm.ViewModels;
@@ -73,30 +74,9 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        using var forceExitCts = new CancellationTokenSource();
-        _ = Task.Run(async () =>
+        if (DataContext is IDisposable disposable)
         {
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(3), forceExitCts.Token);
-                Environment.Exit(0);
-            }
-            catch (OperationCanceledException)
-            {
-                // normal shutdown completed before the fallback was needed
-            }
-        });
-
-        try
-        {
-            if (DataContext is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
-        finally
-        {
-            forceExitCts.Cancel();
+            disposable.Dispose();
         }
 
         DataContext = null;
@@ -107,6 +87,6 @@ public partial class MainWindow : Window
             Application.Current?.Shutdown();
         }
 
-        Environment.Exit(0);
+        Application.Current?.Shutdown();
     }
 }

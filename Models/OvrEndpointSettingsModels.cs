@@ -436,20 +436,20 @@ public sealed class OvrSettingsDialogModel : ObservableObject, IAsyncDisposable
     {
         Endpoints = new ObservableCollection<OvrEndpointSettingsModel>(
         [
-            new("ISEM2-WHRUH_01", "OCR1"), // Over Current Relay1
-            new("ISEM2-WHRUH_02", "OCR2"), // Over Current Relay2
-            new("ISEM2-WHRUH_03", "OCR3"), // Over Current Relay3
-            new("ISEM2-WHRUH_04", "OCR4"), // Over Current Relay4
-            new("ISEM2-WHRUH_05", "OCR5"), // Over Current Relay5
-            new("ISEM2-WHRUH_06", "OCR6"), // Over Current Relay6
-            new("ISEM2-WHRUH_07", "OCR7"), // Over Current Relay7
-            new("ISEM2-WHRUH_08", "OCR8"), // Over Current Relay8
-            new("ISEM2-WHRUH_09", "OCR9"), // Over Current Relay9
+            new("ISEM2-WHRUH_01", "OCR1"),  // Over Current Relay1
+            new("ISEM2-WHRUH_02", "OCR2"),  // Over Current Relay2
+            new("ISEM2-WHRUH_03", "OCR3"),  // Over Current Relay3
+            new("ISEM2-WHRUH_04", "OCR4"),  // Over Current Relay4
+            new("ISEM2-WHRUH_05", "OCR5"),  // Over Current Relay5
+            new("ISEM2-WHRUH_06", "OCR6"),  // Over Current Relay6
+            new("ISEM2-WHRUH_07", "OCR7"),  // Over Current Relay7
+            new("ISEM2-WHRUH_08", "OCR8"),  // Over Current Relay8
+            new("ISEM2-WHRUH_09", "OCR9"),  // Over Current Relay9
             new("ISEM2-WHRUH_10", "OCR10"), // Over Current Relay10
-            new("GIMAC1000", "PM1"),      // bus in 미터계
-            new("GIMAC1000", "PM2"),      // bus out1 미터계
-            new("GIMAC1000", "PM3"),      // bus out2 미터계
-            new("GIMAC1000", "PM4"),      // bus out3 미터계 
+            new("GIMAC1000_01", "PM1"),     // bus in 미터계
+            new("GIMAC1000_02", "PM2"),     // bus out1 미터계
+            new("GIMAC1000_03", "PM3"),     // bus out2 미터계
+            new("GIMAC1000_04", "PM4"),     // bus out3 미터계 
         ]);
     }
 

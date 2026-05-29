@@ -36,6 +36,8 @@ public sealed class IpSettingsWindowViewModel
 
     public AsyncRelayCommand ApplyOvrSettingsCommand => LineSimulator.ApplyOvrSettingsCommand;
 
+    public AsyncRelayCommand ApplyMonitoringServerSettingsCommand => Main.ApplyMonitoringServerSettingsCommand;
+
     public RelayCommand CheckAllIdleUseCommand { get; }
 
     public RelayCommand UncheckAllEnabledUseCommand { get; }

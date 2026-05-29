@@ -2222,7 +2222,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         try
         {
-            State.OvrSettings.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            WaitForShutdownTask(State.OvrSettings.DisposeAsync().AsTask());
         }
         catch
         {
@@ -2231,7 +2231,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
 
         try
         {
-            _modbusGatewayService.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            WaitForShutdownTask(_modbusGatewayService.DisposeAsync().AsTask());
         }
         catch
         {
@@ -2241,6 +2241,21 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         try
         {
             _modbusIoLock.Dispose();
+        }
+        catch
+        {
+            // shutdown path
+        }
+    }
+
+    private static void WaitForShutdownTask(Task task)
+    {
+        try
+        {
+            if (task.Wait(TimeSpan.FromMilliseconds(500)))
+            {
+                task.GetAwaiter().GetResult();
+            }
         }
         catch
         {
