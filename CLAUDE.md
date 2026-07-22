@@ -36,6 +36,13 @@ dotnet test  .\TestMcAlgorithm.sln --no-build    # discovery gate (no test proje
 Release build only when asked. `bin/Release/*.zip` are **hand-made release
 deliverables — never wipe `bin/` wholesale** (regenerable compiled output only).
 
+## Git integration (local-only; push is manual)
+Feature work happens in worktrees, integrates **locally** into `main` (worktree
+commit → merge into the main folder → verify in `TestMcAlgorithm.sln` → repeat).
+**Never run `git push` automatically** — push to origin only when the user explicitly
+asks, at a milestone. **Do not rewrite history** (no squash/rebase): keep every commit
+so the flow stays traceable (user preference, "approach A").
+
 ## Layout
 - `Models/` — state, MC/K definitions, algorithm result records, Modbus protocol +
   monitoring, endpoint settings.
