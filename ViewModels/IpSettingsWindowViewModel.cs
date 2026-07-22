@@ -38,6 +38,8 @@ public sealed class IpSettingsWindowViewModel
 
     public AsyncRelayCommand ApplyMonitoringServerSettingsCommand => Main.ApplyMonitoringServerSettingsCommand;
 
+    public AsyncRelayCommand StopMonitoringServerCommand => Main.StopMonitoringServerCommand;
+
     public RelayCommand CheckAllIdleUseCommand { get; }
 
     public RelayCommand UncheckAllEnabledUseCommand { get; }

@@ -144,6 +144,7 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
@@ -152,8 +153,9 @@
                     <TextBlock Grid.Column="2" Text="Port" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <dxe:SpinEdit Grid.Column="3" Height="30" Margin="0,0,10,0" EditValue="{Binding Main.MonitoringServerPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinValue="1" MaxValue="65535"/>
                     <dx:SimpleButton Grid.Column="4" Content="Apply Server" Width="120" Height="30" Margin="0,0,12,0" Command="{Binding ApplyMonitoringServerSettingsCommand}"/>
-                    <TextBlock Grid.Column="5" Text="Status" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock Grid.Column="6" Text="{Binding Main.MonitoringServerStatusText}" Foreground="#86EFAC" VerticalAlignment="Center"/>
+                    <dx:SimpleButton Grid.Column="5" Content="Disconnect" Width="110" Height="30" Margin="0,0,12,0" Command="{Binding StopMonitoringServerCommand}"/>
+                    <TextBlock Grid.Column="6" Text="Status" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Grid.Column="7" Text="{Binding Main.MonitoringServerStatusText}" Foreground="#86EFAC" VerticalAlignment="Center"/>
                 </Grid>
 
                 <DataGrid Grid.Row="1"
