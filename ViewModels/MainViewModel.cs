@@ -87,6 +87,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand ShowOcrSettingsWindowCommand { get; }
     public RelayCommand ShowLogWindowCommand { get; }
     public AsyncRelayCommand ApplyMonitoringServerSettingsCommand { get; }
+    public AsyncRelayCommand StopMonitoringServerCommand { get; }
 
     public MainViewModel(McAlgorithmService algorithmService, IModbusGatewayService modbusGatewayService)
     {
@@ -113,6 +114,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ShowOcrSettingsWindowCommand = new RelayCommand(_ => ShowOcrSettingsWindow());
         ShowLogWindowCommand = new RelayCommand(_ => ShowLogWindow());
         ApplyMonitoringServerSettingsCommand = new AsyncRelayCommand(_ => ApplyMonitoringServerSettingsAsync());
+        StopMonitoringServerCommand = new AsyncRelayCommand(_ => StopMonitoringServerAsync());
     }
 
     private void ShowIpSettingsWindow()
@@ -243,6 +245,25 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             IsMonitoringServerRunning = false;
             MessageBox.Show(
                 $"Modbus monitoring server restart failed: {ex.Message}",
+                "Modbus Server",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private async Task StopMonitoringServerAsync()
+    {
+        try
+        {
+            IsMonitoringServerRunning = false;
+            await _monitoringServer.StopAsync();
+            MonitoringClients.Clear();
+            ActiveMonitoringClientCount = 0;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Modbus monitoring server stop failed: {ex.Message}",
                 "Modbus Server",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
