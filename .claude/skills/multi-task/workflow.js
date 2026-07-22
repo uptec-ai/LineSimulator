@@ -3,7 +3,7 @@ export const meta = {
   description: '작업 규모에 따라 순차/병렬/팀토론을 자동 선택해 실행하고 통합 검토까지 수행',
   phases: [
     { title: '규모 분석' }, { title: '팀 토론' },
-    { title: '합의' },      { title: '실행' }, { title: '검토' },
+    { title: '합의' },      { title: '실행' }, { title: '검토' }, { title: '통합' },
   ],
 }
 
@@ -17,6 +17,11 @@ const WORKTREE_MAP = {
   ui:        'C:/Project/3. LineSimulator/TestMcAlgorithm-ui',
 }
 const BUILD_CMD = 'dotnet build TestMcAlgorithm.sln -c Debug'
+
+// 자동 로컬 통합 대상. MAIN_REPO는 main이 체크아웃된 메인 저장소 폴더(절대경로).
+// 통합은 로컬 merge까지만 — 이 워크플로우는 git push를 절대 실행하지 않는다.
+const MAIN_REPO   = 'C:/Project/3. LineSimulator/TestMcAlgorithm'
+const MERGE_ORDER = ['algorithm', 'modbus', 'ui']   // 로컬 merge 순서(공유 의존 순)
 
 // 기능 → 담당 커스텀 에이전트(.claude/agents/*.md). 기능별로 다른 전문가가 맡으므로
 // 단일 WORKER_AGENT_TYPE 대신 이 맵으로 라우팅한다.
@@ -212,12 +217,40 @@ const failed    = results.filter(Boolean).filter(r => r.buildSuccess === false)
 const criticalFindings = (review && Array.isArray(review.findings))
   ? review.findings.filter(f => f.severity === 'CRITICAL')
   : []
+const mergeBlocked = criticalFindings.length > 0
+
+// ── 자동 로컬 통합 (push 절대 안 함, 히스토리 보존 = approach A) ──────
+// 워크플로우 엔진은 git을 직접 못 돌리므로, 통합 에이전트가 MAIN_REPO에서 로컬
+// merge를 수행한다. CRITICAL이 있거나(mergeBlocked) 성공 작업이 없으면 건너뛴다.
+let mergeReport = null
+const mergedFeatures = mergeBlocked ? [] : MERGE_ORDER.filter(f =>
+  plan.tasks.some(t => t.feature === f && succeeded.some(s => s.name === t.name))
+)
+if (mergedFeatures.length > 0) {
+  phase('통합')
+  log(`자동 로컬 merge: ${mergedFeatures.map(f => `feature/${f}`).join(', ')} → main (push 안 함)`)
+  mergeReport = await agent(
+    `[자동 로컬 통합] 메인 저장소에서 성공한 feature 브랜치를 main에 로컬 merge하라.\n` +
+    `메인 폴더(절대경로): ${MAIN_REPO}\n` +
+    `merge 순서(그대로 지켜라): ${mergedFeatures.map(f => `feature/${f}`).join(' → ')}\n` +
+    `규칙(엄수):\n` +
+    `1. cd "${MAIN_REPO}" 후 'git branch --show-current'가 main인지 확인. 아니면 중단하고 보고.\n` +
+    `2. 각 브랜치를 순서대로 'git merge --no-ff <branch>'로 로컬 merge. squash/rebase 금지 (히스토리 보존).\n` +
+    `3. 'git push'는 절대 실행하지 마라 — 로컬 merge까지만. 원격(origin)은 건드리지 않는다.\n` +
+    `4. 충돌 시 그 브랜치는 'git merge --abort'로 되돌리고 충돌 사실만 보고 (임의 해결 금지).\n` +
+    `5. 결과: 브랜치별 merge 성공/충돌 여부와 최종 'git log --oneline -8'을 보고.`,
+    { label: '자동 로컬 merge', phase: '통합' }
+  )
+}
 
 return {
   size,
   succeeded: succeeded.map(r => `✅ ${r.name}`),
   failed:    failed.map(r => `❌ ${r.name}`),
   review,
-  mergeBlocked: criticalFindings.length > 0,
+  mergeBlocked,
   criticalFindings,
+  mergedFeatures: mergedFeatures.map(f => `feature/${f}`),
+  mergeReport,
+  pushed: false,   // 이 워크플로우는 절대 push하지 않는다
 }

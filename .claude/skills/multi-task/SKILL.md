@@ -53,13 +53,18 @@ description: 작업 규모를 분석해 순차·병렬·팀토론 중 최적 전
 
 ## Git 통합·푸시 정책 (중요)
 
-- **자동 push 금지.** 이 워크플로우와 에이전트는 `git push`를 절대 실행하지 않는다.
-  origin으로의 전송은 오직 사용자가 명시적으로 요청할 때만, 마일스톤에서 수동으로 한다.
-- 통합은 **로컬 전용**: worktree(feature 브랜치) 커밋 → 메인 폴더에서 로컬 merge →
-  메인 `TestMcAlgorithm.sln`에서 확인 → (필요 시) worktree에서 디테일 수정 → 다시
-  로컬 merge. 이 반복은 전부 로컬이라 origin은 그대로다.
+- **자동 로컬 merge (기본 동작).** 실행이 끝나고 빌드 성공 + CRITICAL 없음(`mergeBlocked=false`)이면,
+  워크플로우가 성공한 feature 브랜치를 `MERGE_ORDER`(algorithm → modbus → ui) 순으로
+  메인 폴더(`MAIN_REPO`)에서 **로컬 merge**한다 (`git merge --no-ff`, 히스토리 보존).
+  merge 후 메인 `TestMcAlgorithm.sln`에서 바로 확인 가능. 충돌 시 그 브랜치는 `--abort`로
+  되돌리고 보고만 한다(임의 해결 금지).
+- **자동 push 금지.** 워크플로우와 에이전트는 `git push`를 절대 실행하지 않는다 (반환값 `pushed:false`).
+  origin 전송은 오직 사용자가 명시적으로 요청할 때만, 마일스톤에서 수동으로 한다.
+- 반복 루프는 전부 로컬: worktree(feature) 커밋 → 자동 로컬 merge → 메인 `.sln` 확인 →
+  worktree에서 디테일 수정 → 다시 실행 → 자동 로컬 merge. origin은 계속 그대로다.
 - **커밋 히스토리 보존 (approach A).** squash/rebase로 히스토리를 재작성하지 않는다.
   중간 커밋을 그대로 남겨 나중에 흐름을 추적하기 쉽게 한다 (사용자 선호).
+- `mergeBlocked=true`(CRITICAL 존재)면 자동 merge를 **건너뛴다** — 사용자가 해소 후 재실행.
 
 ## 원칙
 
