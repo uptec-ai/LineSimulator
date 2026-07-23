@@ -111,32 +111,11 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     private void InitializeEndpointDefaults()
     {
 
-        // 엔드포인트 IP는 App.config(appSettings)의 "{DeviceKey}_Ip" 키에서 읽는다.
-        // 키가 없으면 아래 기본값(기존 하드코딩 값)으로 동작한다.
-        var defaultEndpointIps = new Dictionary<string, string>
-        {
-            ["OCR1"] = "192.168.1.10",
-            ["OCR2"] = "192.168.1.11",
-            ["OCR3"] = "192.168.1.12",
-            ["OCR4"] = "192.168.1.13",
-            ["OCR5"] = "192.168.1.14",
-            ["OCR6"] = "192.168.1.15",
-            ["OCR7"] = "192.168.1.16",
-            ["OCR8"] = "192.168.1.17",
-            ["OCR9"] = "192.168.1.18",
-            ["OCR10"] = "192.168.1.19",
-            ["PM1"] = "192.168.1.20", // bus in Meter계
-            ["PM2"] = "192.168.1.21", // bus out1 Meter계
-            ["PM3"] = "192.168.1.22", // bus out2 Meter계
-            ["PM4"] = "192.168.1.23", // bus out3 Meter계
-        };
-
+        // 엔드포인트 IP는 App.config(appSettings)의 "{DeviceKey}_Ip" 키에서만 관리한다.
+        // (OCR1~OCR10, PM1~PM4). 키가 없으면 모델 기본값(127.0.0.1)을 유지한다.
         foreach (var endpoint in State.OvrSettings.Endpoints)
         {
-            var fallback = defaultEndpointIps.TryGetValue(endpoint.DeviceKey, out var defaultIp)
-                ? defaultIp
-                : endpoint.IpAddress;
-            endpoint.IpAddress = AppConfig.GetString($"{endpoint.DeviceKey}_Ip", fallback);
+            endpoint.IpAddress = AppConfig.GetString($"{endpoint.DeviceKey}_Ip", endpoint.IpAddress);
         }
 
         foreach (var endpoint in State.OvrSettings.Endpoints)
