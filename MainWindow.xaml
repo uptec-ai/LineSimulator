@@ -464,7 +464,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut1LoadRateText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="%" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -542,7 +542,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut2LoadRateText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="%" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -620,7 +620,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="부하율" TextWrapping="Wrap" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="30.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut3LoadRateText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="%" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
