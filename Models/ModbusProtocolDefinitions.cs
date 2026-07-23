@@ -41,8 +41,7 @@ public sealed record ModbusMonitoringSnapshot(
 
 public static class ModbusProtocolDefinitions
 {
-    public const string ServerHost = "127.0.0.1";
-    public const int ServerPort = 7000;
+    // 서버 Host/Port는 App.config(MonitoringServerHost/Port)에서 관리한다.
     public const int MaxMonitoringClients = 16;
     public const byte UnitId = 1;
     public const ushort ProtocolMajorVersion = 1;
