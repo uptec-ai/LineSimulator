@@ -46,6 +46,7 @@
   <ItemGroup>
 	  <PackageReference Include="DevExpress.Wpf.Core" Version="24.2.14" />
 	  <PackageReference Include="NModbus" Version="3.0.81" />
+	  <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
 	  <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
 	  <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
 	  <PackageReference Include="System.Text.Encodings.Web" Version="10.0.5" />
