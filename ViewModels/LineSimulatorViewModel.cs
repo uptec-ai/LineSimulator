@@ -111,11 +111,12 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     private void InitializeEndpointDefaults()
     {
 
-        // 엔드포인트 IP는 App.config(appSettings)의 "{DeviceKey}_Ip" 키에서만 관리한다.
-        // (OCR1~OCR10, PM1~PM4). 키가 없으면 모델 기본값(127.0.0.1)을 유지한다.
+        // 엔드포인트 IP/포트는 App.config(appSettings)의 "{DeviceKey}_Ip" / "{DeviceKey}_Port"
+        // 키에서만 관리한다 (OCR1~OCR10, PM1~PM4). 키가 없으면 모델 기본값(127.0.0.1:502)을 유지한다.
         foreach (var endpoint in State.OvrSettings.Endpoints)
         {
             endpoint.IpAddress = AppConfig.GetString($"{endpoint.DeviceKey}_Ip", endpoint.IpAddress);
+            endpoint.Port = AppConfig.GetInt($"{endpoint.DeviceKey}_Port", endpoint.Port);
         }
 
         foreach (var endpoint in State.OvrSettings.Endpoints)
