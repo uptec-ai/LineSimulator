@@ -15,8 +15,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly ModbusTcpMonitoringServer _monitoringServer;
     private int _activeMonitoringClientCount;
     private bool _isMonitoringServerRunning;
-    private string _monitoringServerHost = AppConfig.GetString("MonitoringServerHost", ModbusProtocolDefinitions.ServerHost);
-    private int _monitoringServerPort = AppConfig.GetInt("MonitoringServerPort", ModbusProtocolDefinitions.ServerPort);
+    // 서버 Host/Port는 App.config(MonitoringServerHost/Port)에서만 관리한다.
+    // 아래 리터럴은 config 키가 아예 없을 때만 쓰는 최소 안전 기본값(loopback)이다.
+    private string _monitoringServerHost = AppConfig.GetString("MonitoringServerHost", "127.0.0.1");
+    private int _monitoringServerPort = AppConfig.GetInt("MonitoringServerPort", 7000);
     public LineSimulatorViewModel LineSimulator { get; }
     public MainScreenStateModel State => LineSimulator.State;
 
