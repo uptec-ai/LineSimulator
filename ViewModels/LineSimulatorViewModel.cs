@@ -74,6 +74,51 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     private PowerMeterMeasurementsModel GetPowerMeter(string deviceKey) =>
         State.OvrSettings.Endpoints.First(endpoint => endpoint.DeviceKey == deviceKey).PowerMeterMeasurements;
 
+    // Bus Out 부하율(%) = 측정전류 / 정격전류 × 100. 정격전류 = RatedKva·1000 / (√3 × 380).
+    // Bus Out #1/#2/#3 → Bus1/Bus2/Bus3 정격(RatedKva)을 기준으로 한다. 값이 없으면 "-".
+    public string BusOut1LoadRateText => FormatLoadRate(BusOut1Meter.AverageCurrent, State.Bus1.RatedKva);
+    public string BusOut2LoadRateText => FormatLoadRate(BusOut2Meter.AverageCurrent, State.Bus2.RatedKva);
+    public string BusOut3LoadRateText => FormatLoadRate(BusOut3Meter.AverageCurrent, State.Bus3.RatedKva);
+
+    private static string FormatLoadRate(double? measuredCurrent, double ratedKva)
+    {
+        if (measuredCurrent is null || ratedKva <= 0)
+        {
+            return "-";
+        }
+
+        var ratedCurrent = ratedKva * 1000.0 / (Math.Sqrt(3.0) * 380.0);
+        return ratedCurrent > 0
+            ? (measuredCurrent.Value / ratedCurrent * 100.0).ToString("0.0")
+            : "-";
+    }
+
+    // 측정전류(폴링) 또는 정격(RatedKva)이 바뀌면 부하율 텍스트를 다시 계산해 알린다.
+    private void WireBusOutLoadRates()
+    {
+        WireLoadRate(BusOut1Meter, State.Bus1, nameof(BusOut1LoadRateText));
+        WireLoadRate(BusOut2Meter, State.Bus2, nameof(BusOut2LoadRateText));
+        WireLoadRate(BusOut3Meter, State.Bus3, nameof(BusOut3LoadRateText));
+    }
+
+    private void WireLoadRate(PowerMeterMeasurementsModel meter, BusSelectionModel bus, string loadRateProperty)
+    {
+        meter.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(PowerMeterMeasurementsModel.AverageCurrentText))
+            {
+                RaisePropertyChanged(loadRateProperty);
+            }
+        };
+        bus.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(BusSelectionModel.RatedKva))
+            {
+                RaisePropertyChanged(loadRateProperty);
+            }
+        };
+    }
+
     #region MainWindow Composition
     public LineSimulatorViewModel(McAlgorithmService algorithmService, IModbusGatewayService modbusGatewayService)
     {
@@ -112,6 +157,7 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         RefreshBusAvailability();
         SyncBusDiagramFeedback();
         InitializeEndpointDefaults();
+        WireBusOutLoadRates();
         AutoCalculatePlan();
         StartIdleMonitor();
     }
