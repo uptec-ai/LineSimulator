@@ -15,8 +15,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly ModbusTcpMonitoringServer _monitoringServer;
     private int _activeMonitoringClientCount;
     private bool _isMonitoringServerRunning;
-    private string _monitoringServerHost = ModbusProtocolDefinitions.ServerHost;
-    private int _monitoringServerPort = ModbusProtocolDefinitions.ServerPort;
+    private string _monitoringServerHost = AppConfig.GetString("MonitoringServerHost", ModbusProtocolDefinitions.ServerHost);
+    private int _monitoringServerPort = AppConfig.GetInt("MonitoringServerPort", ModbusProtocolDefinitions.ServerPort);
     public LineSimulatorViewModel LineSimulator { get; }
     public MainScreenStateModel State => LineSimulator.State;
 

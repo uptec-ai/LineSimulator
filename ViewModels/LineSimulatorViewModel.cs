@@ -111,21 +111,33 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
     private void InitializeEndpointDefaults()
     {
 
-        State.OvrSettings.Endpoints[0].IpAddress = "192.168.1.10"; // ovr1
-        State.OvrSettings.Endpoints[1].IpAddress = "192.168.1.11"; // ovr2
-        State.OvrSettings.Endpoints[2].IpAddress = "192.168.1.12"; // ovr3
-        State.OvrSettings.Endpoints[3].IpAddress = "192.168.1.13"; // ovr4
-        State.OvrSettings.Endpoints[4].IpAddress = "192.168.1.14"; // ovr5
-        State.OvrSettings.Endpoints[5].IpAddress = "192.168.1.15"; // ovr6
-        State.OvrSettings.Endpoints[6].IpAddress = "192.168.1.16"; // ovr7
-        State.OvrSettings.Endpoints[7].IpAddress = "192.168.1.17"; // ovr8
-        State.OvrSettings.Endpoints[8].IpAddress = "192.168.1.18"; // ovr9
-        State.OvrSettings.Endpoints[9].IpAddress = "192.168.1.19"; // ovr10
+        // 엔드포인트 IP는 App.config(appSettings)의 "{DeviceKey}_Ip" 키에서 읽는다.
+        // 키가 없으면 아래 기본값(기존 하드코딩 값)으로 동작한다.
+        var defaultEndpointIps = new Dictionary<string, string>
+        {
+            ["OCR1"] = "192.168.1.10",
+            ["OCR2"] = "192.168.1.11",
+            ["OCR3"] = "192.168.1.12",
+            ["OCR4"] = "192.168.1.13",
+            ["OCR5"] = "192.168.1.14",
+            ["OCR6"] = "192.168.1.15",
+            ["OCR7"] = "192.168.1.16",
+            ["OCR8"] = "192.168.1.17",
+            ["OCR9"] = "192.168.1.18",
+            ["OCR10"] = "192.168.1.19",
+            ["PM1"] = "192.168.1.20", // bus in Meter계
+            ["PM2"] = "192.168.1.21", // bus out1 Meter계
+            ["PM3"] = "192.168.1.22", // bus out2 Meter계
+            ["PM4"] = "192.168.1.23", // bus out3 Meter계
+        };
 
-        State.OvrSettings.Endpoints[10].IpAddress = "192.168.1.20";// bus in Meter계
-        State.OvrSettings.Endpoints[11].IpAddress = "192.168.1.21";// bus out1 Meter계
-        State.OvrSettings.Endpoints[12].IpAddress = "192.168.1.22";// bus out2 Meter계
-        State.OvrSettings.Endpoints[13].IpAddress = "192.168.1.23";// bus out3 Meter계
+        foreach (var endpoint in State.OvrSettings.Endpoints)
+        {
+            var fallback = defaultEndpointIps.TryGetValue(endpoint.DeviceKey, out var defaultIp)
+                ? defaultIp
+                : endpoint.IpAddress;
+            endpoint.IpAddress = AppConfig.GetString($"{endpoint.DeviceKey}_Ip", fallback);
+        }
 
         foreach (var endpoint in State.OvrSettings.Endpoints)
         {
