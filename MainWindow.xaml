@@ -355,7 +355,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전압" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusInMeter.AverageVoltageText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="V" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -370,7 +370,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusInMeter.AverageCurrentText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -385,7 +385,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusInMeter.TotalActivePowerText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -400,7 +400,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="주파수" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusInMeter.FrequencyText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="hz" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -434,7 +434,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut1Meter.AverageCurrentText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -449,7 +449,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut1Meter.TotalActivePowerText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -512,7 +512,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut2Meter.AverageCurrentText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -527,7 +527,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut2Meter.TotalActivePowerText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -590,7 +590,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전류" Grid.Column="1" FontSize="10" Foreground="LightGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="120.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut3Meter.AverageCurrentText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="A" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -605,7 +605,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Ellipse Width="7" Height="7" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="#FF36C0F6" Margin="10,0,0,0"/>
                                         <TextBlock Text="전력" Grid.Column="1" FontSize="10" Foreground="LightGray" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Label Content="380.0" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
+                                        <Label Content="{Binding LineSimulator.BusOut3Meter.TotalActivePowerText}" Grid.Column="2" Style="{StaticResource StatusLabelStyle}" Margin="0,0,4,0"/>
                                         <TextBlock Text="kW" Grid.Column="3" Foreground="#E2E8F0" Margin="0,3,0,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>

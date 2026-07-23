@@ -64,6 +64,16 @@ public sealed class LineSimulatorViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _nbusOut3, value);
     }
 
+    // Bus In/Out 미터계(GIMAC1000) 측정값 — MainWindow 바인딩용.
+    // GIMAC01=PM1(Bus In), 02=PM2(Bus Out#1), 03=PM3(#2), 04=PM4(#3).
+    public PowerMeterMeasurementsModel BusInMeter => GetPowerMeter("PM1");
+    public PowerMeterMeasurementsModel BusOut1Meter => GetPowerMeter("PM2");
+    public PowerMeterMeasurementsModel BusOut2Meter => GetPowerMeter("PM3");
+    public PowerMeterMeasurementsModel BusOut3Meter => GetPowerMeter("PM4");
+
+    private PowerMeterMeasurementsModel GetPowerMeter(string deviceKey) =>
+        State.OvrSettings.Endpoints.First(endpoint => endpoint.DeviceKey == deviceKey).PowerMeterMeasurements;
+
     #region MainWindow Composition
     public LineSimulatorViewModel(McAlgorithmService algorithmService, IModbusGatewayService modbusGatewayService)
     {
